@@ -327,7 +327,7 @@ class TestAlerts:
             "title": "Test Alert",
             "content": "This is a test alert message.",
             "alert_type": "CMAS",
-            "message_id": 4376,  # Test message ID
+            "message_id": 4380,  # Required Monthly Test (3GPP TS 23.041)
             "severity": "test",
             "duration": 3600,
             "cell_ids": [cell_id]

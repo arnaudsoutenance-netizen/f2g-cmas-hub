@@ -77,7 +77,7 @@ async def seed_initial_data():
                     name="AMBER Alert - Enfant disparu",
                     category="amber",
                     alert_type=AlertType.CMAS,
-                    message_id=4375,
+                    message_id=4379,  # AMBER (3GPP TS 23.041)
                     content="ALERTE AMBER: [NOM] [AGE] ans. Vu dernièrement à [LIEU]. Contact: 117.",
                     default_duration=7200,
                 ),
@@ -85,7 +85,7 @@ async def seed_initial_data():
                     name="Test Mensuel",
                     category="test",
                     alert_type=AlertType.CMAS,
-                    message_id=4376,
+                    message_id=4380,  # Required Monthly Test (3GPP TS 23.041)
                     content="TEST MENSUEL DU SYSTÈME D'ALERTE NATIONAL. Aucune action requise. Ceci est un test.",
                     default_duration=1800,
                 ),
