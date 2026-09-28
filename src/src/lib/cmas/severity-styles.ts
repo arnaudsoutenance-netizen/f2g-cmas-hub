@@ -23,6 +23,8 @@ export interface SeverityStyle {
   /** 4 px bar / dot / node colour. */
   edgeBg: string;
   edgeBorder: string;
+  /** Left edge bar drawn with ::before on picker tiles. */
+  edgeBefore: string;
   fg: string;
   selected: string;
   /** Header strip of the handset popup and severity-coloured send buttons. */
@@ -36,6 +38,7 @@ export const SEVERITY_STYLES: Readonly<Record<SeverityTone, SeverityStyle>> = {
     outline: "text-sev-presidential-fg ring-1 ring-inset ring-sev-presidential-edge",
     edgeBg: "bg-sev-presidential-edge",
     edgeBorder: "border-sev-presidential-edge",
+    edgeBefore: "before:bg-sev-presidential-edge",
     fg: "text-sev-presidential-fg",
     selected: "bg-sev-presidential-tint border-sev-presidential-edge ring-1 ring-sev-presidential-edge",
     button: "bg-sev-presidential text-sev-presidential-on hover:bg-sev-presidential/90",
@@ -46,6 +49,7 @@ export const SEVERITY_STYLES: Readonly<Record<SeverityTone, SeverityStyle>> = {
     outline: "text-sev-extreme-fg ring-1 ring-inset ring-sev-extreme-edge",
     edgeBg: "bg-sev-extreme-edge",
     edgeBorder: "border-sev-extreme-edge",
+    edgeBefore: "before:bg-sev-extreme-edge",
     fg: "text-sev-extreme-fg",
     selected: "bg-sev-extreme-tint border-sev-extreme-edge ring-1 ring-sev-extreme-edge",
     button: "bg-sev-extreme text-sev-extreme-on hover:bg-sev-extreme/90",
@@ -57,6 +61,7 @@ export const SEVERITY_STYLES: Readonly<Record<SeverityTone, SeverityStyle>> = {
     outline: "text-sev-severe-fg ring-1 ring-inset ring-sev-severe-edge",
     edgeBg: "bg-sev-severe-edge",
     edgeBorder: "border-sev-severe-edge",
+    edgeBefore: "before:bg-sev-severe-edge",
     fg: "text-sev-severe-fg",
     selected: "bg-sev-severe-tint border-sev-severe-edge ring-1 ring-sev-severe-edge",
     button: "bg-sev-severe text-sev-severe-on ring-1 ring-inset ring-sev-severe-edge hover:bg-sev-severe/90",
@@ -67,6 +72,7 @@ export const SEVERITY_STYLES: Readonly<Record<SeverityTone, SeverityStyle>> = {
     outline: "text-sev-amber-fg ring-1 ring-inset ring-sev-amber-edge",
     edgeBg: "bg-sev-amber-edge",
     edgeBorder: "border-sev-amber-edge",
+    edgeBefore: "before:bg-sev-amber-edge",
     fg: "text-sev-amber-fg",
     selected: "bg-sev-amber-tint border-sev-amber-edge ring-1 ring-sev-amber-edge",
     button: "bg-sev-amber text-sev-amber-on hover:bg-sev-amber/90",
@@ -77,6 +83,7 @@ export const SEVERITY_STYLES: Readonly<Record<SeverityTone, SeverityStyle>> = {
     outline: "text-sev-etws-fg ring-1 ring-inset ring-sev-etws-edge",
     edgeBg: "bg-sev-etws-edge",
     edgeBorder: "border-sev-etws-edge",
+    edgeBefore: "before:bg-sev-etws-edge",
     fg: "text-sev-etws-fg",
     selected: "bg-sev-etws-tint border-sev-etws-edge ring-1 ring-sev-etws-edge",
     button: "bg-sev-etws text-sev-etws-on hover:bg-sev-etws/90",
@@ -87,6 +94,7 @@ export const SEVERITY_STYLES: Readonly<Record<SeverityTone, SeverityStyle>> = {
     outline: "text-sev-test-fg outline outline-1 outline-dashed outline-sev-test-edge -outline-offset-1",
     edgeBg: "bg-sev-test-edge",
     edgeBorder: "border-sev-test-edge border-dashed",
+    edgeBefore: "before:border-l-2 before:border-dashed before:border-sev-test-edge",
     fg: "text-sev-test-fg",
     selected: "bg-sev-test-tint border-sev-test-edge border-dashed ring-1 ring-sev-test-edge",
     button: "bg-sev-test text-sev-test-on hover:bg-sev-test/90",

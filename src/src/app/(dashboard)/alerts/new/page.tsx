@@ -1,508 +1,278 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { CalendarIcon, Send, Save, ArrowLeft, AlertTriangle } from "lucide-react";
+import { m } from "framer-motion";
+import { Check, LibraryBig, Save } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useMemo, useState } from "react";
 import { toast } from "sonner";
-
+import { AlertClassPicker } from "@/components/composer/alert-class-picker";
+import { CellTargetSelector } from "@/components/composer/cell-target-selector";
+import { DurationField } from "@/components/composer/duration-field";
+import { HandsetPreview } from "@/components/composer/handset-preview";
+import { MessageComposer } from "@/components/composer/message-composer";
+import { SendConfirmation } from "@/components/composer/send-confirmation";
+import { SeverityBadge } from "@/components/alerts/severity-badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { ShineBorder } from "@/components/magicui/shine-border";
+import { useCreateAlert, useSendAlert } from "@/hooks/use-alerts";
+import { useCells, useTemplates } from "@/hooks/use-network";
+import { ApiError } from "@/lib/api/client";
+import { classifyMessageId } from "@/lib/cmas/alert-classes";
+import { measureCbs } from "@/lib/cmas/cbs-encoding";
+import { formatDuration } from "@/lib/cmas/composer-utils";
+import { pageEnter } from "@/lib/motion";
 import { cn } from "@/lib/utils";
-import { MESSAGE_IDS, ALERT_COLORS } from "@/types";
-import { MOCK_CELLS, MOCK_TEMPLATES } from "@/lib/stores/alert-store";
-import Link from "next/link";
+import type { AlertCreateInput } from "@/types/domain";
 
-// Validation schema
-const alertSchema = z.object({
-  alertType: z.enum(["CMAS", "ETWS"]),
-  messageId: z.number().min(4352).max(4399),
-  content: z.string().min(1, "Le message est requis").max(1395, "Maximum 1395 caractères"),
-  cellIds: z.array(z.string()).min(1, "Sélectionnez au moins une cellule"),
-  scheduleType: z.enum(["immediate", "scheduled"]),
-  scheduledDate: z.date().optional(),
-  scheduledTime: z.string().optional(),
-  duration: z.number().min(60).max(86400),
-});
+const STEPS = [
+  { id: "classe", label: "Classe" },
+  { id: "message", label: "Message" },
+  { id: "cellules", label: "Cellules" },
+  { id: "duree", label: "Durée et envoi" },
+] as const;
 
-type AlertFormData = z.infer<typeof alertSchema>;
+function Section({ id, index, title, children }: { id: string; index: number; title: string; children: React.ReactNode }) {
+  return (
+    <section id={id} aria-labelledby={`${id}-title`} className="scroll-mt-28 rounded-[12px] bg-shell p-5 sm:p-6">
+      <h2 id={`${id}-title`} className="mb-5 flex items-center gap-3 text-[18px] leading-[26px] font-semibold text-ink">
+        <span className="grid size-7 place-items-center rounded-full bg-navy-tint font-mono text-[13px] text-primary">{index}</span>
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
 
-export default function NewAlertPage() {
+function errorText(error: unknown): string {
+  if (error instanceof ApiError) return error.message;
+  return "La diffusion a échoué. Réessayez.";
+}
+
+function Composer() {
   const router = useRouter();
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const { data: templates } = useTemplates({ active_only: true });
+  const { data: cells } = useCells();
+  const createAlert = useCreateAlert();
+  const sendAlert = useSendAlert();
 
-  const form = useForm<AlertFormData>({
-    resolver: zodResolver(alertSchema),
-    defaultValues: {
-      alertType: "CMAS",
-      messageId: 4370,
-      content: "",
-      cellIds: [],
-      scheduleType: "immediate",
-      duration: 3600,
-    },
-  });
+  const [messageId, setMessageId] = useState<number | null>(null);
+  const [message, setMessage] = useState("");
+  const [cellIds, setCellIds] = useState<string[]>([]);
+  const [durationS, setDurationS] = useState(1_800);
+  const [templateId, setTemplateId] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const [appliedTemplateParam, setAppliedTemplateParam] = useState<string | null>(null);
 
-  const alertType = form.watch("alertType");
-  const messageId = form.watch("messageId");
-  const content = form.watch("content");
-  const scheduleType = form.watch("scheduleType");
-  const selectedCells = form.watch("cellIds");
+  const sizing = useMemo(() => measureCbs(message), [message]);
+  const alertClass = messageId === null ? undefined : classifyMessageId(messageId);
 
-  const messages = alertType === "CMAS" ? MESSAGE_IDS.CMAS : MESSAGE_IDS.ETWS;
-  const selectedMessage = messages.find((m) => m.id === messageId);
+  const applyTemplate = (id: string) => {
+    const tpl = templates?.find((t) => t.id === id);
+    if (!tpl) return;
+    setTemplateId(tpl.id);
+    setMessageId(tpl.message_id);
+    setMessage(tpl.content);
+    setDurationS(tpl.default_duration);
+  };
 
-  const handleTemplateSelect = (templateId: string) => {
-    const template = MOCK_TEMPLATES.find((t) => t.id === templateId);
-    if (template) {
-      setSelectedTemplate(templateId);
-      form.setValue("alertType", template.alertType);
-      form.setValue("messageId", template.messageId);
-      form.setValue("content", template.content);
-      form.setValue("duration", template.defaultDuration);
+  // Prefill from ?template=<id> once templates are loaded (e.g. "Utiliser" in the gallery).
+  const templateParam = searchParams.get("template");
+  if (templateParam && templates && appliedTemplateParam !== templateParam) {
+    setAppliedTemplateParam(templateParam);
+    applyTemplate(templateParam);
+  }
+
+  const onClassChange = (id: number) => {
+    setMessageId(id);
+    // Presidential alerts are national by default.
+    if (classifyMessageId(id)?.confirmLevel === "presidential" && cellIds.length === 0 && cells) {
+      setCellIds(cells.filter((c) => c.status === "active").map((c) => c.id));
     }
   };
 
-  const onSubmit = async (data: AlertFormData) => {
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      if (data.scheduleType === "immediate") {
-        toast.success("Alerte envoyée avec succès!", {
-          description: `Diffusée sur ${data.cellIds.length} cellule(s)`,
-        });
-      } else {
-        toast.success("Alerte programmée!", {
-          description: `Sera envoyée le ${data.scheduledDate ? format(data.scheduledDate, "dd MMMM yyyy", { locale: fr }) : ""}`,
-        });
-      }
-      
-      router.push("/alerts");
-    } catch {
-      toast.error("Erreur lors de l'envoi", {
-        description: "Veuillez réessayer",
-      });
-    }
+  const done = {
+    classe: alertClass !== undefined,
+    message: message.trim().length > 0 && sizing.fits,
+    cellules: cellIds.length > 0,
+    duree: true,
   };
+  const blocker = !done.classe
+    ? "Choisissez une classe d'alerte."
+    : !done.message
+      ? message.trim().length === 0
+        ? "Rédigez le message."
+        : "Le message dépasse la taille maximale."
+      : !done.cellules
+        ? "Sélectionnez au moins une cellule."
+        : null;
+
+  const payload = (): AlertCreateInput | null =>
+    alertClass && messageId !== null
+      ? {
+          alert_type: alertClass.alertType,
+          message_id: messageId,
+          content: message.trim(),
+          duration: durationS,
+          cell_ids: cellIds,
+          template_id: templateId,
+        }
+      : null;
+
+  const saveDraft = () => {
+    const input = payload();
+    if (!input) return;
+    createAlert.mutate(input, {
+      onSuccess: (alert) => {
+        toast.success("Brouillon enregistré");
+        router.push(`/alerts/${alert.id}`);
+      },
+      onError: (error) => toast.error("Enregistrement impossible", { description: errorText(error) }),
+    });
+  };
+
+  // Send-path rule (DESIGN.md §5.3): the request goes out first; UI follows.
+  const broadcast = () => {
+    const input = payload();
+    if (!input) return;
+    setSendError(null);
+    createAlert.mutate(input, {
+      onSuccess: (alert) =>
+        sendAlert.mutate(
+          { id: alert.id },
+          {
+            onSuccess: (result) => {
+              setConfirmOpen(false);
+              router.push(`/alerts/${result.id}`);
+              toast.success("Diffusion lancée", { description: result.message });
+            },
+            onError: (error) => {
+              setSendError(`Alerte créée en brouillon mais non diffusée : ${errorText(error)}`);
+              router.prefetch(`/alerts/${alert.id}`);
+            },
+          },
+        ),
+      onError: (error) => setSendError(errorText(error)),
+    });
+  };
+
+  const pending = createAlert.isPending || sendAlert.isPending;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/alerts">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </Link>
+    <m.div {...pageEnter} className="space-y-5">
+      <header className="flex flex-wrap items-center justify-between gap-4 rounded-[12px] bg-shell px-5 py-4 sm:px-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Nouvelle Alerte</h1>
-          <p className="text-muted-foreground">
-            Créez et programmez une alerte Cell Broadcast
-          </p>
+          <h1 className="font-display text-[24px] leading-[30px] font-semibold text-ink">Nouvelle alerte</h1>
+          <p className="text-[13px] text-ink-3">Classe, message, cellules, durée : vérifiez l&apos;aperçu avant de diffuser.</p>
         </div>
-      </div>
+        {templates && templates.length > 0 && (
+          <label className="flex items-center gap-2 text-[13px] text-ink-2">
+            <LibraryBig aria-hidden className="size-4" />
+            <span className="sr-only sm:not-sr-only">Charger un modèle</span>
+            <select
+              value={templateId ?? ""}
+              onChange={(e) => e.target.value && applyTemplate(e.target.value)}
+              className="h-10 max-w-[260px] rounded-[8px] border border-control-border bg-shell px-3 text-[13px] text-ink"
+            >
+              <option value="">Choisir un modèle…</option>
+              {templates.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name} · {t.message_id}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+      </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Form */}
-        <div className="lg:col-span-2 space-y-6">
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Alert Type Selection */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Type d&apos;alerte</CardTitle>
-                <CardDescription>
-                  Sélectionnez le système d&apos;alerte à utiliser
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <RadioGroup
-                  value={alertType}
-                  onValueChange={(value) => {
-                    form.setValue("alertType", value as "CMAS" | "ETWS");
-                    // Reset messageId to first of the new type
-                    const newMessages = value === "CMAS" ? MESSAGE_IDS.CMAS : MESSAGE_IDS.ETWS;
-                    form.setValue("messageId", newMessages[0].id);
-                  }}
-                  className="grid grid-cols-2 gap-4"
+      <div className="grid gap-5 lg:grid-cols-12">
+        <nav aria-label="Étapes" className="hidden lg:col-span-2 lg:block">
+          <ol className="sticky top-28 space-y-1 rounded-[12px] bg-shell p-3">
+            {STEPS.map((step, i) => (
+              <li key={step.id}>
+                <a
+                  href={`#${step.id}`}
+                  className="flex items-center gap-2.5 rounded-[8px] px-2.5 py-2 text-[13px] text-ink-2 hover:bg-surface-hover hover:text-ink"
                 >
-                  <Label
-                    htmlFor="cmas"
+                  <span
                     className={cn(
-                      "flex flex-col items-center justify-center rounded-lg border-2 p-4 cursor-pointer transition-all",
-                      alertType === "CMAS"
-                        ? "border-primary bg-primary/5"
-                        : "border-muted hover:border-muted-foreground/50"
+                      "grid size-6 shrink-0 place-items-center rounded-full border font-mono text-[11px]",
+                      done[step.id] ? "border-st-sent bg-st-sent-tint text-st-sent-fg" : "border-hairline-strong text-ink-3",
                     )}
                   >
-                    <RadioGroupItem value="CMAS" id="cmas" className="sr-only" />
-                    <AlertTriangle className="h-8 w-8 mb-2 text-orange-500" />
-                    <span className="font-semibold">CMAS</span>
-                    <span className="text-xs text-muted-foreground text-center">
-                      Commercial Mobile Alert System
-                    </span>
-                  </Label>
-                  <Label
-                    htmlFor="etws"
-                    className={cn(
-                      "flex flex-col items-center justify-center rounded-lg border-2 p-4 cursor-pointer transition-all",
-                      alertType === "ETWS"
-                        ? "border-primary bg-primary/5"
-                        : "border-muted hover:border-muted-foreground/50"
-                    )}
-                  >
-                    <RadioGroupItem value="ETWS" id="etws" className="sr-only" />
-                    <AlertTriangle className="h-8 w-8 mb-2 text-blue-500" />
-                    <span className="font-semibold">ETWS</span>
-                    <span className="text-xs text-muted-foreground text-center">
-                      Earthquake & Tsunami Warning
-                    </span>
-                  </Label>
-                </RadioGroup>
-              </CardContent>
-            </Card>
-
-            {/* Message ID Selection */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Catégorie de l&apos;alerte</CardTitle>
-                <CardDescription>
-                  Choisissez la gravité et le type de message
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Select
-                  value={messageId.toString()}
-                  onValueChange={(value) => form.setValue("messageId", parseInt(value ?? "0"))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionnez une catégorie" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {messages.map((msg) => (
-                      <SelectItem key={msg.id} value={msg.id.toString()}>
-                        <div className="flex items-center gap-2">
-                          <Badge className={cn("text-white", ALERT_COLORS[msg.category])}>
-                            {msg.id}
-                          </Badge>
-                          <span className="font-medium">{msg.name}</span>
-                          <span className="text-muted-foreground">
-                            - {msg.description}
-                          </span>
-                          {!msg.optOut && (
-                            <Badge variant="destructive" className="ml-auto text-xs">
-                              Obligatoire
-                            </Badge>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                
-                {selectedMessage && (
-                  <div className="mt-4 p-3 rounded-lg bg-muted/50">
-                    <div className="flex items-center gap-2">
-                      <Badge className={cn("text-white", ALERT_COLORS[selectedMessage.category])}>
-                        {selectedMessage.name}
-                      </Badge>
-                      {!selectedMessage.optOut && (
-                        <Badge variant="outline" className="text-xs">
-                          Pas de désactivation possible
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {selectedMessage.description}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Message Content */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Contenu du message</CardTitle>
-                <CardDescription>
-                  Rédigez le message d&apos;alerte (max 1395 caractères)
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Textarea
-                  placeholder="Rédigez votre message d'alerte ici..."
-                  className="min-h-[150px] resize-none"
-                  {...form.register("content")}
-                />
-                <div className="flex items-center justify-between text-sm">
-                  <span className={cn(
-                    "text-muted-foreground",
-                    content.length > 1395 && "text-destructive"
-                  )}>
-                    {content.length}/1395 caractères
+                    {done[step.id] ? <Check aria-hidden className="size-3.5" /> : i + 1}
                   </span>
-                  {form.formState.errors.content && (
-                    <span className="text-destructive">
-                      {form.formState.errors.content.message}
-                    </span>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                  {step.label}
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
 
-            {/* Cell Selection */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Cellules cibles</CardTitle>
-                <CardDescription>
-                  Sélectionnez les cellules qui diffuseront l&apos;alerte
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {MOCK_CELLS.map((cell) => (
-                    <Label
-                      key={cell.id}
-                      className={cn(
-                        "flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all",
-                        selectedCells.includes(cell.id)
-                          ? "border-primary bg-primary/5"
-                          : "border-muted hover:border-muted-foreground/50",
-                        cell.status === "offline" && "opacity-50"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Checkbox
-                          checked={selectedCells.includes(cell.id)}
-                          onCheckedChange={(checked) => {
-                            const current = form.getValues("cellIds");
-                            if (checked) {
-                              form.setValue("cellIds", [...current, cell.id]);
-                            } else {
-                              form.setValue("cellIds", current.filter((id) => id !== cell.id));
-                            }
-                          }}
-                          disabled={cell.status === "offline"}
-                        />
-                        <div>
-                          <span className="font-medium">{cell.name}</span>
-                          <p className="text-xs text-muted-foreground">
-                            {cell.cellId} • {cell.location}
-                          </p>
-                        </div>
-                      </div>
-                      <Badge
-                        variant={cell.status === "active" ? "default" : "destructive"}
-                        className="text-xs"
-                      >
-                        {cell.status === "active" ? "En ligne" : "Hors ligne"}
-                      </Badge>
-                    </Label>
-                  ))}
-                </div>
-                {form.formState.errors.cellIds && (
-                  <p className="text-sm text-destructive mt-2">
-                    {form.formState.errors.cellIds.message}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+        <div className="space-y-5 lg:col-span-6">
+          <Section id="classe" index={1} title="Classe d'alerte">
+            <AlertClassPicker value={messageId} onChange={onClassChange} />
+          </Section>
+          <Section id="message" index={2} title="Message">
+            <MessageComposer value={message} onChange={setMessage} />
+          </Section>
+          <Section id="cellules" index={3} title="Cellules ciblées">
+            <CellTargetSelector value={cellIds} onChange={setCellIds} presidential={alertClass?.confirmLevel === "presidential"} />
+          </Section>
+          <Section id="duree" index={4} title="Durée et envoi">
+            <DurationField value={durationS} onChange={setDurationS} />
+          </Section>
+        </div>
 
-            {/* Scheduling */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Programmation</CardTitle>
-                <CardDescription>
-                  Choisissez quand envoyer l&apos;alerte
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <RadioGroup
-                  value={scheduleType}
-                  onValueChange={(value) => form.setValue("scheduleType", value as "immediate" | "scheduled")}
-                  className="space-y-3"
-                >
-                  <Label
-                    className={cn(
-                      "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all",
-                      scheduleType === "immediate"
-                        ? "border-primary bg-primary/5"
-                        : "border-muted"
-                    )}
-                  >
-                    <RadioGroupItem value="immediate" />
-                    <div>
-                      <span className="font-medium">Envoyer immédiatement</span>
-                      <p className="text-xs text-muted-foreground">
-                        L&apos;alerte sera diffusée dès validation
-                      </p>
-                    </div>
-                  </Label>
-                  <Label
-                    className={cn(
-                      "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all",
-                      scheduleType === "scheduled"
-                        ? "border-primary bg-primary/5"
-                        : "border-muted"
-                    )}
-                  >
-                    <RadioGroupItem value="scheduled" />
-                    <div>
-                      <span className="font-medium">Programmer</span>
-                      <p className="text-xs text-muted-foreground">
-                        Choisir une date et heure d&apos;envoi
-                      </p>
-                    </div>
-                  </Label>
-                </RadioGroup>
-
-                {scheduleType === "scheduled" && (
-                  <div className="grid grid-cols-2 gap-4 pt-4">
-                    <div className="space-y-2">
-                      <Label>Date</Label>
-                      <Popover>
-                        <PopoverTrigger>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !form.watch("scheduledDate") && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {form.watch("scheduledDate")
-                              ? format(form.watch("scheduledDate")!, "PPP", { locale: fr })
-                              : "Sélectionner"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={form.watch("scheduledDate")}
-                            onSelect={(date) => form.setValue("scheduledDate", date)}
-                            disabled={(date) => date < new Date()}
-                            locale={fr}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Heure</Label>
-                      <Input
-                        type="time"
-                        {...form.register("scheduledTime")}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <Separator />
-
-                <div className="space-y-2">
-                  <Label>Durée de validité</Label>
-                  <Select
-                    value={form.watch("duration").toString()}
-                    onValueChange={(value) => form.setValue("duration", parseInt(value ?? "0"))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1800">30 minutes</SelectItem>
-                      <SelectItem value="3600">1 heure</SelectItem>
-                      <SelectItem value="7200">2 heures</SelectItem>
-                      <SelectItem value="14400">4 heures</SelectItem>
-                      <SelectItem value="28800">8 heures</SelectItem>
-                      <SelectItem value="86400">24 heures</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Actions */}
-            <div className="flex items-center justify-end gap-3">
-              <Button type="button" variant="outline">
-                <Save className="h-4 w-4 mr-2" />
-                Sauvegarder brouillon
+        <aside className="lg:col-span-4">
+          <div className="sticky top-28 space-y-4 rounded-[12px] bg-shell p-5">
+            <HandsetPreview messageId={messageId} message={message} />
+            <dl className="grid grid-cols-[96px_1fr] gap-y-1.5 border-t border-hairline pt-4 text-[13px]">
+              <dt className="text-ink-3">Classe</dt>
+              <dd>{messageId !== null ? <SeverityBadge messageId={messageId} size="sm" /> : <span className="text-ink-3">—</span>}</dd>
+              <dt className="text-ink-3">Cellules</dt>
+              <dd className="font-mono text-ink tabular-nums">{cellIds.length}</dd>
+              <dt className="text-ink-3">Encodage</dt>
+              <dd className="font-mono text-ink">
+                {sizing.encoding} · {message ? sizing.pages : 0} p.
+              </dd>
+              <dt className="text-ink-3">Durée</dt>
+              <dd className="font-mono text-ink">{formatDuration(durationS)} · immédiat</dd>
+            </dl>
+            <div className="space-y-2">
+              <Button size="lg" className="w-full rounded-[8px]" disabled={blocker !== null || pending} onClick={() => setConfirmOpen(true)}>
+                Vérifier et diffuser
               </Button>
-              <Button type="submit" className="min-w-[150px]">
-                <Send className="h-4 w-4 mr-2" />
-                {scheduleType === "immediate" ? "Envoyer maintenant" : "Programmer"}
+              {blocker && <p className="text-center text-[12px] text-ink-3">{blocker}</p>}
+              <Button variant="ghost" size="md" className="w-full" disabled={blocker !== null || pending} onClick={saveDraft}>
+                <Save aria-hidden className="size-4" /> Enregistrer le brouillon
               </Button>
             </div>
-          </form>
-        </div>
-
-        {/* Sidebar - Templates */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Templates</CardTitle>
-              <CardDescription>
-                Utilisez un modèle pré-défini
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {MOCK_TEMPLATES.map((template) => (
-                <button
-                  key={template.id}
-                  type="button"
-                  onClick={() => handleTemplateSelect(template.id)}
-                  className={cn(
-                    "w-full text-left p-3 rounded-lg border transition-all",
-                    selectedTemplate === template.id
-                      ? "border-primary bg-primary/5"
-                      : "border-muted hover:border-muted-foreground/50"
-                  )}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge className={cn("text-white text-xs", ALERT_COLORS[template.category])}>
-                      {template.alertType}
-                    </Badge>
-                    <span className="font-medium text-sm">{template.name}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground line-clamp-2">
-                    {template.content}
-                  </p>
-                </button>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Preview */}
-          {content && (
-            <ShineBorder className="w-full" borderRadius={12}>
-              <div className="w-full">
-                <p className="text-xs font-medium text-muted-foreground mb-2">
-                  APERÇU DU MESSAGE
-                </p>
-                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-                  <p className="text-sm font-medium text-destructive mb-1">
-                    {selectedMessage?.name || "Alerte"}
-                  </p>
-                  <p className="text-sm">{content}</p>
-                </div>
-              </div>
-            </ShineBorder>
-          )}
-        </div>
+          </div>
+        </aside>
       </div>
-    </div>
+
+      {messageId !== null && (
+        <SendConfirmation
+          open={confirmOpen}
+          onOpenChange={(open) => {
+            setConfirmOpen(open);
+            if (!open) setSendError(null);
+          }}
+          draft={{ messageId, message: message.trim(), cellCount: cellIds.length, durationS, sizing }}
+          onConfirm={broadcast}
+          pending={pending}
+          error={sendError}
+        />
+      )}
+    </m.div>
+  );
+}
+
+export default function NewAlertPage() {
+  return (
+    <Suspense>
+      <Composer />
+    </Suspense>
   );
 }
