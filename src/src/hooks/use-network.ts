@@ -62,7 +62,7 @@ export function useCells(status?: CellStatus) {
   return useQuery({
     queryKey: queryKeys.cells.list(status),
     queryFn: ({ signal }) => cellsApi.list(status, signal),
-    refetchInterval: 60_000,
+    refetchInterval: 15_000,
   });
 }
 

@@ -33,7 +33,10 @@ describe("classifyMessageId (3GPP TS 23.041)", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("only Presidential needs the critical confirmation", () => {
-    expect(ALERT_CLASSES.filter((c) => c.critical).map((c) => c.key)).toEqual(["presidential"]);
+  it("scales confirmation with blast radius", () => {
+    const level = (id: number) => classifyMessageId(id)?.confirmLevel;
+    expect(level(4370)).toBe("presidential");
+    expect([4371, 4375, 4379, 4352, 4354].map(level)).toEqual(Array(5).fill("standard"));
+    expect([4380, 4381, 4355].map(level)).toEqual(["light", "light", "light"]);
   });
 });
