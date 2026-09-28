@@ -13,6 +13,8 @@
   /* brand / rail */
   --rail: #13223F; --rail-item-active: #1C2E52; --rail-ink: #F3EEE6; --rail-ink-2: #A9B6CF;
   --brand-orange: #EC8236; --brand-navy: #1F3864;
+  /* Berry × F2G shell */
+  --well: #EEF2F6; --shell: #FFFFFF; --orange-deep: #B85418; --orange-tint: #FDEFE4; --orange-fg: #9A4A12; --navy-deep: #1F3864; --navy-tint: #E8EDF6;
   /* severity: solid / on / tint / fg / edge */
   --sev-presidential: #9D174D; --sev-presidential-on: #FFFFFF; --sev-presidential-tint: #FCE7F1; --sev-presidential-fg: #831843; --sev-presidential-edge: #9D174D;
   --sev-extreme: #B91C1C;      --sev-extreme-on: #FFFFFF;      --sev-extreme-tint: #FDECEA;      --sev-extreme-fg: #991B1B;      --sev-extreme-edge: #B91C1C;
@@ -53,6 +55,7 @@
   --primary: #F3EEE6; --primary-fg: #0E1A30; --primary-tint: #17233D; --link: #A9BCE6;
   --focus: #7FA6FF; --danger: #F97066; --danger-tint: #2A1111;
   --rail: #0D1830; --rail-item-active: #16264A;
+  --well: #0A1120; --shell: #111A2C; --orange-tint: #2A1A0E; --orange-fg: #F4B27C; --navy-deep: #1B3160; --navy-tint: #17233D;
   --sev-presidential: #B0135A; --sev-presidential-tint: #2A0D1C; --sev-presidential-fg: #F9A8D4; --sev-presidential-edge: #F0529C;
   --sev-extreme: #C62828;      --sev-extreme-tint: #2A1111;      --sev-extreme-fg: #FCA5A5;      --sev-extreme-edge: #EF4444;
   --sev-severe: #F0C232;       --sev-severe-tint: #262010;       --sev-severe-fg: #F5D36A;       --sev-severe-edge: #F0C232;
@@ -80,6 +83,8 @@
   --color-danger: var(--danger); --color-danger-tint: var(--danger-tint);
   --color-rail: var(--rail); --color-rail-item-active: var(--rail-item-active); --color-rail-ink: var(--rail-ink); --color-rail-ink-2: var(--rail-ink-2);
   --color-brand-orange: var(--brand-orange); --color-brand-navy: var(--brand-navy);
+  --color-well: var(--well); --color-shell: var(--shell); --color-orange-deep: var(--orange-deep); --color-orange-tint: var(--orange-tint);
+  --color-orange-fg: var(--orange-fg); --color-navy-deep: var(--navy-deep); --color-navy-tint: var(--navy-tint);
   /* severity: bg-sev-extreme, text-sev-extreme-on, bg-sev-extreme-tint, text-sev-extreme-fg, border-sev-extreme-edge … */
   --color-sev-presidential: var(--sev-presidential); --color-sev-presidential-on: var(--sev-presidential-on); --color-sev-presidential-tint: var(--sev-presidential-tint); --color-sev-presidential-fg: var(--sev-presidential-fg); --color-sev-presidential-edge: var(--sev-presidential-edge);
   --color-sev-extreme: var(--sev-extreme); --color-sev-extreme-on: var(--sev-extreme-on); --color-sev-extreme-tint: var(--sev-extreme-tint); --color-sev-extreme-fg: var(--sev-extreme-fg); --color-sev-extreme-edge: var(--sev-extreme-edge);
@@ -114,7 +119,7 @@
 @layer base {
   * { @apply border-hairline; }
   html { font-feature-settings: "ss02" 0; }
-  body { @apply bg-canvas text-ink font-sans antialiased; font-size: 14px; line-height: 22px; }
+  body { @apply bg-shell text-ink font-sans antialiased; font-size: 14px; line-height: 22px; }
   :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
   .tnum { font-variant-numeric: tabular-nums slashed-zero; }
 }

@@ -5,33 +5,36 @@ import { LoginForm } from "@/components/auth/login-form";
 
 export const metadata: Metadata = { title: "Connexion" };
 
+/** Berry-style centred card on the grey well. */
 export default function LoginPage() {
   return (
-    <div className="flex min-h-dvh flex-col bg-canvas md:flex-row">
-      <aside className="flex h-22 shrink-0 items-center bg-rail px-6 text-rail-ink md:h-auto md:w-[44%] md:flex-col md:items-start md:justify-between md:p-12">
-        <F2GMark className="size-10 text-[15px]" />
-        <div className="hidden md:block">
-          <h1 className="max-w-sm font-display text-[32px] leading-9 font-semibold text-rail-ink">
-            Diffusion d&apos;alertes d&apos;urgence
-          </h1>
-          <span aria-hidden className="mt-5 block h-[3px] w-12 rounded-full bg-brand-orange" />
-          <p className="mt-5 max-w-sm text-[14px] leading-[22px] text-rail-ink-2">
-            République du Cameroun · Cell Broadcast CMAS / ETWS
-          </p>
-        </div>
-        <p className="hidden text-[12px] text-rail-ink-2 md:block">F2G Laboratory | Confidential</p>
-      </aside>
+    <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-well px-4 py-10">
+      <span aria-hidden className="absolute -top-40 -right-40 size-[28rem] rounded-full bg-navy-tint" />
+      <span aria-hidden className="absolute -bottom-48 -left-32 size-[26rem] rounded-full bg-orange-tint" />
 
-      <main className="flex flex-1 items-center px-6 py-12 md:px-16">
-        <div className="w-full max-w-[380px]">
-          <h2 className="font-display text-[24px] leading-[30px] font-semibold text-ink">Connexion</h2>
-          <p className="mt-1.5 text-[14px] text-ink-2">Accès réservé aux opérateurs habilités.</p>
-          <Suspense>
-            <LoginForm />
-          </Suspense>
-          <p className="mt-8 text-[13px] text-ink-3">Problème d&apos;accès ? Contactez l&apos;administrateur système.</p>
+      <main className="relative w-full max-w-[475px] rounded-[12px] border border-hairline bg-shell p-8 shadow-e2 sm:p-10">
+        <div className="flex items-center justify-center gap-2.5">
+          <F2GMark className="size-10 text-[15px]" />
+          <span className="font-display text-[24px] leading-none font-bold text-ink">CMAS Hub</span>
         </div>
+
+        <div className="mt-8 text-center">
+          <h1 className="font-display text-[24px] leading-[30px] font-semibold text-primary">Bonjour, bon retour</h1>
+          <p className="mt-2 text-[14px] text-ink-3">Saisissez vos identifiants d&apos;opérateur pour continuer.</p>
+        </div>
+
+        <Suspense>
+          <LoginForm />
+        </Suspense>
+
+        <p className="mt-8 border-t border-hairline pt-5 text-center text-[13px] text-ink-3">
+          Problème d&apos;accès ? Contactez l&apos;administrateur système.
+        </p>
       </main>
+
+      <p className="relative mt-6 text-center text-[12px] text-ink-3">
+        République du Cameroun · Cell Broadcast CMAS / ETWS · F2G Laboratory | Confidential
+      </p>
     </div>
   );
 }

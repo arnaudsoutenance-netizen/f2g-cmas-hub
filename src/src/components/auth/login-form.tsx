@@ -22,7 +22,7 @@ function errorMessage(error: unknown): string {
 }
 
 const inputClass =
-  "h-11 w-full rounded-[var(--radius-sm)] border border-control-border bg-surface px-3 text-[15px] text-ink placeholder:text-ink-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus aria-[invalid=true]:border-danger";
+  "h-12 w-full rounded-[8px] border border-control-border bg-shell px-3.5 text-[15px] text-ink placeholder:text-ink-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus aria-[invalid=true]:border-danger";
 
 export function LoginForm() {
   const router = useRouter();

@@ -1,25 +1,54 @@
 "use client";
 
 import { m } from "framer-motion";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { F2GWordmark } from "@/components/brand/f2g-mark";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useCells } from "@/hooks/use-network";
 import { spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { activeHref, NAV_SECTIONS } from "./nav-items";
 
-const ENV_LABEL = process.env.NEXT_PUBLIC_ENV === "production" ? "PROD" : "FORMATION";
+const ENV_LABEL = process.env.NEXT_PUBLIC_ENV === "production" ? "Production" : "Formation";
 
 interface AppRailProps {
   collapsed?: boolean;
-  onToggleCollapsed?: () => void;
   onNavigate?: () => void;
   className?: string;
 }
 
-export function AppRail({ collapsed = false, onToggleCollapsed, onNavigate, className }: AppRailProps) {
+/** Berry-style network card at the bottom of the sidebar. Stale data is never shown as healthy. */
+function NetworkCard() {
+  const { data: cells, isError } = useCells();
+  const total = cells?.length ?? 0;
+  const active = cells?.filter((c) => c.status === "active").length ?? 0;
+  const pct = total > 0 ? Math.round((active / total) * 100) : 0;
+
+  return (
+    <Link
+      href="/cells"
+      className="relative block overflow-hidden rounded-[12px] bg-navy-tint p-4 transition-colors hover:bg-navy-tint/80"
+    >
+      <span aria-hidden className="absolute -top-8 -right-8 size-20 rounded-full bg-brand-orange/25" />
+      <p className="relative text-[14px] font-semibold text-primary">Réseau de diffusion</p>
+      <p className="relative mt-0.5 text-[12px] text-ink-2">
+        {isError || !cells ? "Liaison inconnue" : `${active}/${total} cellules actives`}
+      </p>
+      <div className="relative mt-3 flex items-center justify-between text-[12px] font-medium text-ink-2">
+        <span>Disponibilité</span>
+        <span className="tabular-nums">{isError || !cells ? "—" : `${pct} %`}</span>
+      </div>
+      <div className="relative mt-1.5 h-1.5 overflow-hidden rounded-full bg-shell">
+        <span
+          className={cn("block h-full rounded-full", isError ? "bg-ink-3" : "bg-primary")}
+          style={{ width: `${isError ? 0 : pct}%` }}
+        />
+      </div>
+    </Link>
+  );
+}
+
+export function AppRail({ collapsed = false, onNavigate, className }: AppRailProps) {
   const pathname = usePathname();
   const current = activeHref(pathname);
 
@@ -28,26 +57,16 @@ export function AppRail({ collapsed = false, onToggleCollapsed, onNavigate, clas
       aria-label="Navigation principale"
       data-collapsed={collapsed}
       className={cn(
-        "flex h-full flex-col border-r border-black/20 bg-rail text-rail-ink transition-[width] duration-200 ease-[var(--ease-standard)]",
-        collapsed ? "w-16" : "w-60",
+        "flex h-full flex-col bg-shell text-ink transition-[width] duration-200 ease-[var(--ease-standard)]",
+        collapsed ? "w-[76px]" : "w-[260px]",
         className,
       )}
     >
-      <div className={cn("flex h-14 items-center", collapsed ? "justify-center" : "px-4")}>
-        <Link href="/" onClick={onNavigate} className="rounded-[var(--radius-sm)]" aria-label="CMAS Hub, tableau de bord">
-          <F2GWordmark collapsed={collapsed} />
-        </Link>
-      </div>
-
-      <div className="flex-1 space-y-5 overflow-y-auto py-4">
-        {NAV_SECTIONS.map((section) => (
-          <div key={section.title}>
-            {!collapsed && (
-              <p className="mb-1.5 px-5 text-[11px] font-semibold tracking-[0.08em] text-rail-ink-2 uppercase">
-                {section.title}
-              </p>
-            )}
-            <ul className="space-y-0.5">
+      <div className="flex-1 overflow-y-auto px-4 pb-4">
+        {NAV_SECTIONS.map((section, i) => (
+          <div key={section.title} className={cn("py-3", i > 0 && "border-t border-hairline")}>
+            {!collapsed && <p className="mb-2 px-2 text-[14px] font-semibold text-ink">{section.title}</p>}
+            <ul className="space-y-1">
               {section.items.map((item) => {
                 const active = item.href === current;
                 const link = (
@@ -56,22 +75,18 @@ export function AppRail({ collapsed = false, onToggleCollapsed, onNavigate, clas
                     onClick={onNavigate}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "relative mx-2 flex h-9 items-center gap-3 rounded-[var(--radius-md)] px-3 text-[14px] transition-colors duration-150",
+                      "relative flex h-11 items-center gap-3.5 rounded-[12px] px-4 text-[14px] transition-colors duration-150",
                       collapsed && "justify-center px-0",
-                      active ? "bg-rail-item-active text-rail-ink" : "text-rail-ink-2 hover:bg-white/5 hover:text-rail-ink",
+                      active ? "font-medium text-primary" : "text-ink-2 hover:bg-navy-tint/60 hover:text-primary",
                     )}
                   >
                     {active && (
-                      <m.span
-                        layoutId="rail-active-bar"
-                        transition={spring.layout}
-                        className="absolute inset-y-2 left-0 w-[3px] rounded-r bg-brand-orange"
-                      />
+                      <m.span layoutId="rail-active" transition={spring.layout} className="absolute inset-0 rounded-[12px] bg-navy-tint" />
                     )}
-                    <item.icon aria-hidden className="size-[18px] shrink-0 stroke-[1.75]" />
-                    {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+                    <item.icon aria-hidden className="relative size-5 shrink-0 stroke-[1.75]" />
+                    {!collapsed && <span className="relative flex-1 truncate">{item.label}</span>}
                     {!collapsed && item.shortcut && (
-                      <kbd className="font-mono text-[11px] text-rail-ink-2">{item.shortcut}</kbd>
+                      <kbd className="relative font-mono text-[11px] text-ink-3">{item.shortcut}</kbd>
                     )}
                   </Link>
                 );
@@ -93,25 +108,16 @@ export function AppRail({ collapsed = false, onToggleCollapsed, onNavigate, clas
         ))}
       </div>
 
-      <div className={cn("border-t border-white/10 py-3", collapsed ? "px-2" : "px-4")}>
-        {!collapsed && (
-          <p className="mb-2 text-[11px] leading-4 text-rail-ink-2">
-            Env : <span className="font-mono font-medium text-rail-ink">{ENV_LABEL}</span>
-            <span className="block">F2G Laboratory</span>
+      {!collapsed && (
+        <div className="space-y-3 px-4 pb-5">
+          <NetworkCard />
+          <p className="text-center">
+            <span className="inline-block rounded-full bg-surface-sunken px-3 py-1 font-mono text-[11px] text-ink-2">
+              {ENV_LABEL} · F2G Laboratory
+            </span>
           </p>
-        )}
-        {onToggleCollapsed && (
-          <button
-            type="button"
-            onClick={onToggleCollapsed}
-            aria-label={collapsed ? "Déplier la navigation" : "Replier la navigation"}
-            className="flex h-8 w-full items-center justify-center gap-2 rounded-[var(--radius-sm)] text-[12px] text-rail-ink-2 hover:bg-white/5 hover:text-rail-ink"
-          >
-            {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
-            {!collapsed && "Replier"}
-          </button>
-        )}
-      </div>
+        </div>
+      )}
     </nav>
   );
 }
