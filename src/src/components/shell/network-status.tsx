@@ -1,11 +1,12 @@
 "use client";
 
 import { formatDistanceToNowStrict } from "date-fns";
-import { fr } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import Link from "next/link";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useCells } from "@/hooks/use-network";
 import { cn } from "@/lib/utils";
+import { cellState } from "@/lib/cmas/cell-state";
 
 const TICKS = 7;
 
@@ -14,9 +15,9 @@ export function NetworkStatus({ compact = false }: { compact?: boolean }) {
   const { data: cells, isError, isPending, dataUpdatedAt } = useCells();
 
   const total = cells?.length ?? 0;
-  const active = cells?.filter((c) => c.status === "active").length ?? 0;
-  const offline = cells?.filter((c) => c.status === "offline") ?? [];
-  const maintenance = cells?.filter((c) => c.status === "maintenance") ?? [];
+  const active = cells?.filter((c) => cellState(c.status) === "online").length ?? 0;
+  const offline = cells?.filter((c) => cellState(c.status) === "offline") ?? [];
+  const maintenance = cells?.filter((c) => cellState(c.status) === "maintenance") ?? [];
   const unknown = isError || isPending;
 
   const filled = total > 0 ? Math.round((active / total) * TICKS) : 0;
@@ -33,10 +34,16 @@ export function NetworkStatus({ compact = false }: { compact?: boolean }) {
             aria-hidden
             className={cn(
               "size-2 rounded-full",
-              unknown ? "ring-[1.5px] ring-inset ring-ink-3" : isError ? "bg-st-failed" : "bg-st-sent",
+              unknown
+                ? "ring-[1.5px] ring-inset ring-ink-3"
+                : active === 0
+                  ? "bg-st-failed"
+                  : active < total
+                    ? "bg-sev-severe"
+                    : "bg-st-sent",
             )}
           />
-          <span className="font-mono font-medium">{unknown ? "Liaison inconnue" : "CBC"}</span>
+          <span className="font-mono font-medium">{unknown ? "Link unknown" : "CBC"}</span>
         </span>
         {!unknown && (
           <>
@@ -67,7 +74,7 @@ export function NetworkStatus({ compact = false }: { compact?: boolean }) {
           <p className="text-[15px] font-semibold text-ink">Broadcast Network</p>
           <p className="text-xs text-ink-3">
             {dataUpdatedAt > 0
-              ? `Mis à jour il y a ${formatDistanceToNowStrict(dataUpdatedAt, { locale: fr })}`
+              ? `Updated ${formatDistanceToNowStrict(dataUpdatedAt, { locale: enUS })} ago`
               : "No data received"}
           </p>
         </div>
@@ -78,23 +85,23 @@ export function NetworkStatus({ compact = false }: { compact?: boolean }) {
                 aria-hidden
                 className={cn(
                   "size-2 rounded-full",
-                  cell.status === "offline" ? "bg-st-failed" : "ring-[1.5px] ring-inset ring-ink-3",
+                  cellState(cell.status) === "offline" ? "bg-st-failed" : "ring-[1.5px] ring-inset ring-ink-3",
                 )}
               />
               <span className="flex-1 truncate text-ink">{cell.name}</span>
               <span className="font-mono text-[12px] text-ink-3">
                 {cell.last_seen
-                  ? formatDistanceToNowStrict(new Date(cell.last_seen), { locale: fr, addSuffix: true })
-                  : cell.status === "maintenance"
+                  ? formatDistanceToNowStrict(new Date(cell.last_seen), { locale: enUS, addSuffix: true })
+                  : cellState(cell.status) === "maintenance"
                     ? "maintenance"
-                    : "jamais vue"}
+                    : "never seen"}
               </span>
             </li>
           ))}
           {!unknown && offline.length + maintenance.length === 0 && (
             <li className="px-4 py-3 text-[13px] text-ink-2">All cells are online.</li>
           )}
-          {isError && <li className="px-4 py-3 text-[13px] text-danger">Le serveur ne répond pas.</li>}
+          {isError && <li className="px-4 py-3 text-[13px] text-danger">The server is not responding.</li>}
         </ul>
         <div className="border-t border-hairline px-4 py-2.5">
           <Link href="/cells" className="text-[13px] font-medium text-link hover:underline">

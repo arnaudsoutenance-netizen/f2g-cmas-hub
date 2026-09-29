@@ -4,7 +4,7 @@ import { animate, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { ease } from "@/lib/motion";
 
-const numberFormat = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 });
+const numberFormat = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
 
 /**
  * Counts up on first mount only. After that, new values swap instantly and the

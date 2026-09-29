@@ -8,6 +8,7 @@ import { useCells } from "@/hooks/use-network";
 import { spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { activeHref, NAV_SECTIONS } from "./nav-items";
+import { cellState } from "@/lib/cmas/cell-state";
 
 const ENV_LABEL = process.env.NEXT_PUBLIC_ENV === "production" ? "Production" : "Training";
 
@@ -21,7 +22,7 @@ interface AppRailProps {
 function NetworkCard() {
   const { data: cells, isError } = useCells();
   const total = cells?.length ?? 0;
-  const active = cells?.filter((c) => c.status === "active").length ?? 0;
+  const active = cells?.filter((c) => cellState(c.status) === "online").length ?? 0;
   const pct = total > 0 ? Math.round((active / total) * 100) : 0;
 
   return (
@@ -35,7 +36,7 @@ function NetworkCard() {
         {isError || !cells ? "Connection unknown" : `${active}/${total} active cells`}
       </p>
       <div className="relative mt-3 flex items-center justify-between text-[12px] font-medium text-ink-2">
-        <span>Disponibilité</span>
+        <span>Availability</span>
         <span className="tabular-nums">{isError || !cells ? "—" : `${pct} %`}</span>
       </div>
       <div className="relative mt-1.5 h-1.5 overflow-hidden rounded-full bg-shell">
@@ -54,7 +55,7 @@ export function AppRail({ collapsed = false, onNavigate, className }: AppRailPro
 
   return (
     <nav
-      aria-label="Navigation principale"
+      aria-label="Main navigation"
       data-collapsed={collapsed}
       className={cn(
         "flex h-full flex-col bg-shell text-ink transition-[width] duration-200 ease-[var(--ease-standard)]",

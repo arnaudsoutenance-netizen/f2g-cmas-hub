@@ -34,7 +34,9 @@ describe("convertToGsm7", () => {
 describe("regions", () => {
   it("derives the city from the cell ID prefix", () => {
     expect(regionOf({ cell_id: "YDE-001" })).toBe("Yaoundé · Centre");
+    expect(regionOf({ cell_id: "MRA-3" })).toBe("Maroua · Far North");
     expect(regionOf({ cell_id: "XYZ-9" })).toBe("Zone XYZ");
+    expect(regionOf({ cell_id: "" })).toBe("No region");
   });
 
   it("groups and sorts cells", () => {

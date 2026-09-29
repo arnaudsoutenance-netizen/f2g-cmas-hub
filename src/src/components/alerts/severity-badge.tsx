@@ -30,7 +30,7 @@ export function SeverityBadge({ messageId, variant = "tint", size = "md", showId
 
   return (
     <span
-      aria-label={`Classe ${alertClass.label}, identifiant ${messageId}`}
+      aria-label={`Class ${alertClass.label}, identifier ${messageId}`}
       className={cn(
         "inline-flex shrink-0 items-center gap-1.5 rounded-[var(--radius-xs)] font-semibold uppercase tracking-[0.06em]",
         size === "md" ? "h-6 px-2 text-[11px] leading-4" : "h-5 px-1.5 text-[10px] leading-4",

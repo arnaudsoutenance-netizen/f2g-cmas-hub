@@ -46,31 +46,31 @@ const statusConfig: Record<
   DRAFT: {
     icon: PencilLine,
     activeClass: "border-ink-3 bg-surface-sunken text-ink-3",
-    completedClass: "border-st-sent bg-st-sent text-white",
+    completedClass: "border-st-sent bg-st-sent text-st-on",
     lineClass: "bg-st-sent",
   },
   SCHEDULED: {
     icon: Clock3,
     activeClass: "border-primary bg-primary-tint text-primary",
-    completedClass: "border-st-sent bg-st-sent text-white",
+    completedClass: "border-st-sent bg-st-sent text-st-on",
     lineClass: "bg-st-sent",
   },
   SENDING: {
     icon: Loader2,
-    activeClass: "border-primary bg-primary text-white",
-    completedClass: "border-st-sent bg-st-sent text-white",
+    activeClass: "border-primary bg-primary text-primary-foreground",
+    completedClass: "border-st-sent bg-st-sent text-st-on",
     lineClass: "bg-st-sent",
   },
   SENT: {
     icon: CircleCheck,
-    activeClass: "border-st-sent bg-st-sent text-white",
-    completedClass: "border-st-sent bg-st-sent text-white",
+    activeClass: "border-st-sent bg-st-sent text-st-on",
+    completedClass: "border-st-sent bg-st-sent text-st-on",
     lineClass: "bg-st-sent",
   },
   FAILED: {
     icon: CircleX,
-    activeClass: "border-st-failed bg-st-failed text-white",
-    completedClass: "border-st-failed bg-st-failed text-white",
+    activeClass: "border-st-failed bg-st-failed text-st-on",
+    completedClass: "border-st-failed bg-st-failed text-st-on",
     lineClass: "bg-st-failed",
   },
   CANCELLED: {
@@ -216,7 +216,7 @@ export function StatusTimeline({
   );
 }
 
-// Preset pour CMAS Hub - Parcours standard d'une alerte
+// CMAS Hub preset: the standard alert lifecycle
 export function AlertStatusTimeline({
   currentStatus,
   timestamps,
@@ -239,7 +239,7 @@ export function AlertStatusTimeline({
     },
     {
       status: "SENDING",
-      label: "En cours",
+      label: "Sending",
       timestamp: timestamps?.SENDING,
     },
     {
@@ -249,20 +249,20 @@ export function AlertStatusTimeline({
     },
   ];
 
-  // Remplacer le dernier step si échec ou annulé
+  // Replace the last step when failed or cancelled
   if (currentStatus === "FAILED") {
     steps[3] = {
       status: "FAILED",
-      label: "Échec",
+      label: "Failed",
       timestamp: timestamps?.FAILED,
     };
   } else if (currentStatus === "CANCELLED") {
     steps[2] = {
       status: "CANCELLED",
-      label: "Annulée",
+      label: "Cancelled",
       timestamp: timestamps?.CANCELLED,
     };
-    steps.pop(); // Retirer SENT
+    steps.pop(); // Remove SENT
   }
 
   return (

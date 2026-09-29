@@ -18,7 +18,7 @@ export function getInitials(name: string): string {
 /**
  * Format a number with thousands separator
  */
-export function formatNumber(num: number, locale = "fr-FR"): string {
+export function formatNumber(num: number, locale = "en-US"): string {
   return new Intl.NumberFormat(locale).format(num);
 }
 

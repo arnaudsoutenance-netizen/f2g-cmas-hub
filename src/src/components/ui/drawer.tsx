@@ -158,7 +158,7 @@ export function Drawer({
                   variant="ghost"
                   size="icon-sm"
                   onClick={() => onOpenChange(false)}
-                  aria-label="Fermer"
+                  aria-label="Close"
                 >
                   <X className="size-4" />
                 </Button>

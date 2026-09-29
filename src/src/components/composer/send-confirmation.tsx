@@ -12,7 +12,7 @@ import { SEVERITY_STYLES } from "@/lib/cmas/severity-styles";
 import { useSessionStore } from "@/lib/stores/session-store";
 import { cn } from "@/lib/utils";
 
-export const PRESIDENTIAL_PHRASE = "DIFFUSION NATIONALE";
+export const PRESIDENTIAL_PHRASE = "NATIONAL BROADCAST";
 
 export interface AlertDraft {
   messageId: number;
@@ -63,7 +63,7 @@ export function SendConfirmation({ open, onOpenChange, draft, onConfirm, pending
       ? "Broadcast test"
       : level === "presidential"
         ? "Broadcast presidential alert"
-        : `Broadcast to ${draft.cellCount} cell${draft.cellCount > 1 ? "s" : ""}`;
+        : `Broadcast to ${draft.cellCount} cell${draft.cellCount === 1 ? "" : "s"}`;
 
   return (
     <Dialog open={open} onOpenChange={close}>
@@ -83,7 +83,7 @@ export function SendConfirmation({ open, onOpenChange, draft, onConfirm, pending
             <p className="flex gap-2.5 rounded-[8px] bg-sev-presidential-tint p-3 text-[13px] text-sev-presidential-fg">
               <LockKeyhole aria-hidden className="mt-0.5 size-4 shrink-0" />
               This alert cannot be disabled by recipients. It will be broadcast to {draft.cellCount} cell
-              {draft.cellCount > 1 ? "s" : ""}.
+              {draft.cellCount === 1 ? "" : "s"}.
             </p>
           )}
 
@@ -97,13 +97,13 @@ export function SendConfirmation({ open, onOpenChange, draft, onConfirm, pending
           </blockquote>
 
           <dl className="grid grid-cols-[110px_1fr] gap-y-1.5 text-[13px]">
-            <dt className="text-ink-3">Cellules</dt>
+            <dt className="text-ink-3">Cells</dt>
             <dd className="font-mono text-ink tabular-nums">{draft.cellCount}</dd>
-            <dt className="text-ink-3">Durée</dt>
+            <dt className="text-ink-3">Duration</dt>
             <dd className="font-mono text-ink">{formatDuration(draft.durationS)}</dd>
-            <dt className="text-ink-3">Envoi</dt>
-            <dd className="text-ink">Immédiat</dd>
-            <dt className="text-ink-3">Encodage</dt>
+            <dt className="text-ink-3">Send</dt>
+            <dd className="text-ink">Immediate</dd>
+            <dt className="text-ink-3">Encoding</dt>
             <dd className="font-mono text-ink">
               {draft.sizing.encoding} · {draft.sizing.pages} page{draft.sizing.pages > 1 ? "s" : ""}
             </dd>
@@ -118,14 +118,14 @@ export function SendConfirmation({ open, onOpenChange, draft, onConfirm, pending
                 onChange={(e) => setReviewed(e.target.checked)}
                 className="mt-1 size-4 accent-[var(--primary)]"
               />
-              J&apos;ai relu le message et vérifié les cells ciblées.
+              I have reviewed the message and checked the target cells.
             </label>
           )}
 
           {level === "presidential" && (
             <div className="space-y-1.5">
               <label htmlFor={ids.phrase} className="text-[13px] text-ink-2">
-                Pour confirmer, saisissez <strong className="font-mono text-ink">{PRESIDENTIAL_PHRASE}</strong>
+                To confirm, type <strong className="font-mono text-ink">{PRESIDENTIAL_PHRASE}</strong>
               </label>
               <input
                 id={ids.phrase}
@@ -138,10 +138,10 @@ export function SendConfirmation({ open, onOpenChange, draft, onConfirm, pending
                   if (e.key === "Enter") confirm();
                 }}
               />
-              {!phraseOk && phrase.length > 0 && <p className="text-[12px] text-ink-3">Saisie incomplète.</p>}
+              {!phraseOk && phrase.length > 0 && <p className="text-[12px] text-ink-3">Incomplete entry.</p>}
               {user && (
                 <p className="text-[12px] text-ink-3">
-                  Signée par {user.name} · {new Date().toLocaleTimeString("fr-FR")}
+                  Signed by {user.name} · {new Date().toLocaleTimeString("en-US")}
                 </p>
               )}
             </div>
@@ -152,7 +152,7 @@ export function SendConfirmation({ open, onOpenChange, draft, onConfirm, pending
               <CircleX aria-hidden className="mt-0.5 size-4 shrink-0" />
               <span className="flex-1">{error}</span>
               <button type="button" onClick={confirm} className="flex items-center gap-1 font-medium underline-offset-2 hover:underline">
-                <RotateCw aria-hidden className="size-3.5" /> Réessayer
+                <RotateCw aria-hidden className="size-3.5" /> Retry
               </button>
             </div>
           )}
@@ -164,7 +164,7 @@ export function SendConfirmation({ open, onOpenChange, draft, onConfirm, pending
           </Button>
           <Button size="lg" disabled={!ready || pending} onClick={confirm} className={cn("rounded-[8px]", style.button)}>
             {pending && <LoaderCircle aria-hidden className="size-4 animate-spin" />}
-            {pending ? "Diffusion…" : label}
+            {pending ? "Broadcasting…" : label}
           </Button>
         </div>
       </DialogContent>

@@ -7,23 +7,23 @@ import { cn } from "@/lib/utils";
 export type TrendDirection = "up" | "down" | "neutral";
 
 export interface StatCardProps {
-  /** Label affiché au-dessus de la valeur */
+  /** Label shown above the value */
   label: string;
-  /** Valeur principale (chiffre, pourcentage, etc.) */
+  /** Main value (number, percentage, etc.) */
   value: string | number;
-  /** Icône Lucide affichée en haut à gauche */
+  /** Lucide icon shown at the top left */
   icon?: LucideIcon;
-  /** Valeur du badge de tendance (ex: "+12.5%") */
+  /** Trend badge value (e.g. "+12.5%") */
   trend?: string;
-  /** Direction de la tendance pour la couleur */
+  /** Trend direction, drives the colour */
   trendDirection?: TrendDirection;
-  /** Description secondaire en bas */
+  /** Secondary description at the bottom */
   description?: string;
-  /** Classes CSS additionnelles */
+  /** Additional CSS classes */
   className?: string;
-  /** Animation au chargement */
+  /** Animate on load */
   animate?: boolean;
-  /** Délai d'animation (en secondes) */
+  /** Animation delay (seconds) */
   animationDelay?: number;
 }
 
@@ -111,7 +111,7 @@ export function StatCard({
   return <div className={baseClassName}>{content}</div>;
 }
 
-// Variante compacte pour les grilles denses
+// Compact variant for dense grids
 export function StatCardCompact({
   label,
   value,
@@ -159,7 +159,7 @@ export function StatCardCompact({
   );
 }
 
-// Variante hero (grande card colorée) pour les stats principales
+// Hero variant (large coloured card) for headline stats
 export interface HeroStatCardProps {
   label: string;
   value: string | number;
@@ -176,8 +176,8 @@ export function HeroStatCard({
   className,
 }: HeroStatCardProps) {
   const variantStyles = {
-    navy: "bg-primary text-primary-fg",
-    orange: "bg-[#B85418] text-white",
+    navy: "bg-navy-deep text-navy-on",
+    orange: "bg-orange-deep text-orange-on",
   };
 
   return (
@@ -188,9 +188,9 @@ export function HeroStatCard({
         className
       )}
     >
-      {/* Cercles décoratifs style Berry */}
-      <div className="pointer-events-none absolute -right-8 -top-8 size-32 rounded-full bg-white/10" />
-      <div className="pointer-events-none absolute -bottom-4 -right-4 size-20 rounded-full bg-white/5" />
+      {/* Berry-style decorative circles */}
+      <div className="pointer-events-none absolute -right-8 -top-8 size-32 rounded-full bg-current/10" />
+      <div className="pointer-events-none absolute -bottom-4 -right-4 size-20 rounded-full bg-current/5" />
 
       <p className="relative text-[13px] font-medium opacity-80">{label}</p>
       <p className="relative mt-2 font-display text-[36px] font-bold leading-none tabular-nums">

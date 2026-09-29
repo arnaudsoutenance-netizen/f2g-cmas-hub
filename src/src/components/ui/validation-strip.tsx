@@ -74,16 +74,16 @@ export function ValidationStrip({
           <div className="mb-2 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <h4 className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
-                Problèmes
+                Problems
               </h4>
               {errorCount > 0 && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-st-failed-tint px-2 py-0.5 text-[10px] font-medium text-st-failed-fg">
-                  {errorCount} erreur{errorCount > 1 ? "s" : ""}
+                  {errorCount} error{errorCount === 1 ? "" : "s"}
                 </span>
               )}
               {warningCount > 0 && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-sev-severe-tint px-2 py-0.5 text-[10px] font-medium text-sev-severe-fg">
-                  {warningCount} avertissement{warningCount > 1 ? "s" : ""}
+                  {warningCount} warning{warningCount === 1 ? "" : "s"}
                 </span>
               )}
             </div>
@@ -92,7 +92,7 @@ export function ValidationStrip({
                 type="button"
                 onClick={onClose}
                 className="grid size-6 place-items-center rounded text-ink-3 hover:bg-surface-hover hover:text-ink"
-                aria-label="Masquer les problèmes"
+                aria-label="Hide problems"
               >
                 <X className="size-3.5" />
               </button>
@@ -125,7 +125,7 @@ export function ValidationStrip({
                         onClick={problem.onSelect}
                         className="ml-2 text-[12px] font-medium text-primary hover:underline"
                       >
-                        voir
+                        view
                       </button>
                     )}
                   </span>

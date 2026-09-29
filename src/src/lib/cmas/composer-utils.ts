@@ -65,22 +65,22 @@ export function convertToGsm7(text: string): string {
 const CITY_BY_PREFIX: Readonly<Record<string, string>> = {
   YDE: "Yaoundé · Centre",
   DLA: "Douala · Littoral",
-  BFS: "Bafoussam · Ouest",
-  GRA: "Garoua · Nord",
-  MRA: "Maroua · Extrême-Nord",
-  BDA: "Bamenda · Nord-Ouest",
-  BUA: "Buea · Sud-Ouest",
-  LMB: "Limbé · Sud-Ouest",
-  KRB: "Kribi · Sud",
-  NGD: "Ngaoundéré · Adamaoua",
-  BRT: "Bertoua · Est",
-  EBW: "Ebolowa · Sud",
+  BFS: "Bafoussam · West",
+  GRA: "Garoua · North",
+  MRA: "Maroua · Far North",
+  BDA: "Bamenda · North West",
+  BUA: "Buea · South West",
+  LMB: "Limbé · South West",
+  KRB: "Kribi · South",
+  NGD: "Ngaoundéré · Adamawa",
+  BRT: "Bertoua · East",
+  EBW: "Ebolowa · South",
 };
 
 /** Groups cells by the city code prefixing their cell ID (YDE-001 → Yaoundé). */
 export function regionOf(cell: Pick<CellSite, "cell_id">): string {
   const prefix = cell.cell_id.split("-")[0]?.toUpperCase() ?? "";
-  return CITY_BY_PREFIX[prefix] ?? (prefix ? `Zone ${prefix}` : "Sans région");
+  return CITY_BY_PREFIX[prefix] ?? (prefix ? `Zone ${prefix}` : "No region");
 }
 
 export function groupCellsByRegion<T extends Pick<CellSite, "cell_id">>(cells: readonly T[]): Array<[string, T[]]> {
@@ -89,5 +89,5 @@ export function groupCellsByRegion<T extends Pick<CellSite, "cell_id">>(cells: r
     const region = regionOf(cell);
     groups.set(region, [...(groups.get(region) ?? []), cell]);
   }
-  return [...groups.entries()].sort(([a], [b]) => a.localeCompare(b, "fr"));
+  return [...groups.entries()].sort(([a], [b]) => a.localeCompare(b, "en"));
 }

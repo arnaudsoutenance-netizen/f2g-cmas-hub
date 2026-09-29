@@ -25,6 +25,11 @@
   /* status dots + pill tints */
   --st-draft: #7A8394; --st-scheduled: #1F3864; --st-sending: #2563EB; --st-sent: #15803D; --st-failed: #C81E1E; --st-cancelled: #7A8394;
   --st-sent-tint: #E3F4E8; --st-sent-fg: #166534; --st-failed-tint: #FDECEA; --st-failed-fg: #991B1B; --st-scheduled-tint: #E8EDF6; --st-scheduled-fg: #1F3864;
+  --st-draft-tint: #EEF0F3; --st-draft-fg: #4A5263; --st-sending-tint: #E6EEFD; --st-sending-fg: #1D4ED8; --st-cancelled-tint: #EEF0F3; --st-cancelled-fg: #4A5263;
+  /* text on solid fills: st-* solids, orange-deep, navy-deep */
+  --st-on: #FFFFFF; --orange-on: #FFFFFF; --navy-on: #FFFFFF;
+  /* handset preview: a physical dark-mode phone, identical in both themes */
+  --device-bezel: #0B0F17; --device-screen: #1C2230; --device-card: #232A3A; --device-ink: #FFFFFF; --device-ink-2: #C9CED8;
   /* elevation */
   --shadow-e1: 0 1px 2px rgb(14 26 48 / .06), 0 1px 0 rgb(14 26 48 / .03);
   --shadow-e2: 0 8px 24px -6px rgb(14 26 48 / .14), 0 2px 6px -2px rgb(14 26 48 / .08);
@@ -64,6 +69,8 @@
   --sev-test: #5B667A;         --sev-test-tint: #1A2233;         --sev-test-fg: #C4CCD9;         --sev-test-edge: #8A96AB;
   --st-draft: #7C879B; --st-scheduled: #9DB1D9; --st-sending: #60A5FA; --st-sent: #4ADE80; --st-failed: #F87171; --st-cancelled: #7C879B;
   --st-sent-tint: #0F2A1B; --st-sent-fg: #86EFAC; --st-failed-tint: #2A1111; --st-failed-fg: #FCA5A5; --st-scheduled-tint: #17233D; --st-scheduled-fg: #C7D3EC;
+  --st-draft-tint: #1A2233; --st-draft-fg: #C4CCD9; --st-sending-tint: #0F1D3D; --st-sending-fg: #93C5FD; --st-cancelled-tint: #1A2233; --st-cancelled-fg: #C4CCD9;
+  --st-on: #0A1120;
   --shadow-e1: inset 0 1px 0 rgb(255 255 255 / .04);
   --shadow-e2: 0 12px 32px -8px rgb(0 0 0 / .55), inset 0 1px 0 rgb(255 255 255 / .05);
   --shadow-e3: 0 28px 72px -12px rgb(0 0 0 / .7), inset 0 1px 0 rgb(255 255 255 / .06);
@@ -79,7 +86,7 @@
   --color-surface-sunken: var(--surface-sunken); --color-surface-hover: var(--surface-hover);
   --color-hairline: var(--hairline); --color-hairline-strong: var(--hairline-strong); --color-control-border: var(--control-border);
   --color-ink: var(--ink); --color-ink-2: var(--ink-2); --color-ink-3: var(--ink-3); --color-ink-disabled: var(--ink-disabled);
-  --color-primary-tint: var(--primary-tint); --color-link: var(--link); --color-focus: var(--focus);
+  --color-primary-fg: var(--primary-fg); --color-primary-tint: var(--primary-tint); --color-link: var(--link); --color-focus: var(--focus);
   --color-danger: var(--danger); --color-danger-tint: var(--danger-tint);
   --color-rail: var(--rail); --color-rail-item-active: var(--rail-item-active); --color-rail-ink: var(--rail-ink); --color-rail-ink-2: var(--rail-ink-2);
   --color-brand-orange: var(--brand-orange); --color-brand-navy: var(--brand-navy);
@@ -96,6 +103,11 @@
   --color-st-sent: var(--st-sent); --color-st-failed: var(--st-failed); --color-st-cancelled: var(--st-cancelled);
   --color-st-sent-tint: var(--st-sent-tint); --color-st-sent-fg: var(--st-sent-fg); --color-st-failed-tint: var(--st-failed-tint);
   --color-st-failed-fg: var(--st-failed-fg); --color-st-scheduled-tint: var(--st-scheduled-tint); --color-st-scheduled-fg: var(--st-scheduled-fg);
+  --color-st-draft-tint: var(--st-draft-tint); --color-st-draft-fg: var(--st-draft-fg); --color-st-sending-tint: var(--st-sending-tint);
+  --color-st-sending-fg: var(--st-sending-fg); --color-st-cancelled-tint: var(--st-cancelled-tint); --color-st-cancelled-fg: var(--st-cancelled-fg);
+  --color-st-on: var(--st-on); --color-orange-on: var(--orange-on); --color-navy-on: var(--navy-on);
+  --color-device-bezel: var(--device-bezel); --color-device-screen: var(--device-screen); --color-device-card: var(--device-card);
+  --color-device-ink: var(--device-ink); --color-device-ink-2: var(--device-ink-2);
 
   /* shadcn mapping */
   --color-background: var(--background); --color-foreground: var(--foreground);

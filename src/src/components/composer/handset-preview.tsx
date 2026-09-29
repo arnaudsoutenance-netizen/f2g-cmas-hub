@@ -32,10 +32,10 @@ export function HandsetPreview({ messageId, message, className }: HandsetPreview
         animate={reduce || !cls ? undefined : { x: [0, -2, 2, -1, 0] }}
         transition={{ duration: 0.28 }}
         role="img"
-        aria-label={cls ? `Aperçu téléphone : ${cls.handsetTitle}. ${message || "message vide"}` : "Aperçu téléphone : aucune classe choisie"}
-        className="relative aspect-[9/19.5] w-[280px] rounded-[44px] bg-[#0B0F17] p-2.5 shadow-e3 ring-1 ring-black/40"
+        aria-label={cls ? `Handset preview: ${cls.handsetTitle}. ${message || "empty message"}` : "Handset preview: no class selected"}
+        className="relative aspect-[9/19.5] w-[280px] rounded-[44px] bg-device-bezel p-2.5 shadow-e3 ring-1 ring-device-bezel/40"
       >
-        <div className="relative flex h-full flex-col overflow-hidden rounded-[36px] bg-[#1C2230] bg-[radial-gradient(circle_at_30%_20%,rgba(31,56,100,0.35),transparent_60%)] font-device text-white">
+        <div className="relative flex h-full flex-col overflow-hidden rounded-[36px] bg-device-screen bg-[radial-gradient(circle_at_30%_20%,color-mix(in_srgb,var(--brand-navy)_35%,transparent),transparent_60%)] font-device text-device-ink">
           <div className="flex items-center justify-between px-6 pt-3 text-[11px] font-medium">
             <span className="tabular-nums">09:41</span>
             <span className="flex items-center gap-1">
@@ -47,7 +47,7 @@ export function HandsetPreview({ messageId, message, className }: HandsetPreview
           <AnimatePresence mode="wait" initial={false}>
             {!cls || !style || !Icon ? (
               <m.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid flex-1 place-items-center px-8 text-center">
-                <span className="flex flex-col items-center gap-2 text-[13px] text-[#C9CED8]">
+                <span className="flex flex-col items-center gap-2 text-[13px] text-device-ink-2">
                   <LockKeyhole aria-hidden className="size-5" />
                   Choose an alert class
                 </span>
@@ -59,26 +59,26 @@ export function HandsetPreview({ messageId, message, className }: HandsetPreview
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
                 transition={spring.gentle}
-                className={cn("relative mx-3 overflow-hidden rounded-[16px] bg-[#232A3A] shadow-e2", platform === "android" ? "mt-auto mb-auto" : "mt-10 rounded-[22px]")}
+                className={cn("relative mx-3 overflow-hidden rounded-[16px] bg-device-card shadow-e2", platform === "android" ? "mt-auto mb-auto" : "mt-10 rounded-[22px]")}
               >
                 <div className={cn("flex items-center gap-2 px-4 py-2.5 text-[14px] font-semibold", style.solid)}>
                   <Icon aria-hidden className="size-4 shrink-0" />
-                  <span className="truncate">{platform === "ios" ? "Alerte d'urgence" : cls.handsetTitle}</span>
+                  <span className="truncate">{platform === "ios" ? "Emergency Alert" : cls.handsetTitle}</span>
                 </div>
                 <div className="relative max-h-[300px] overflow-y-auto px-4 py-3">
-                  {platform === "ios" && <p className="mb-1 text-[13px] font-semibold text-white">{cls.handsetTitle}</p>}
-                  <p className={cn("text-[14px] leading-[21px] whitespace-pre-wrap", message ? "text-white" : "text-[#C9CED8] italic")}>
-                    {message || "Votre message apparaîtra ici"}
+                  {platform === "ios" && <p className="mb-1 text-[13px] font-semibold text-device-ink">{cls.handsetTitle}</p>}
+                  <p className={cn("text-[14px] leading-[21px] whitespace-pre-wrap", message ? "text-device-ink" : "text-device-ink-2 italic")}>
+                    {message || "Your message will appear here"}
                   </p>
                   {isTest && (
-                    <span aria-hidden className="pointer-events-none absolute inset-0 grid place-items-center font-display text-[44px] font-bold text-white/8 -rotate-[18deg]">
+                    <span aria-hidden className="pointer-events-none absolute inset-0 grid place-items-center font-display text-[44px] font-bold text-device-ink/8 -rotate-[18deg]">
                       TEST
                     </span>
                   )}
                 </div>
-                <div className="flex items-center justify-between border-t border-white/10 px-4 py-2 text-[12px] text-[#C9CED8]">
-                  <span>Maintenant</span>
-                  <span className="font-semibold text-white">OK</span>
+                <div className="flex items-center justify-between border-t border-device-ink/10 px-4 py-2 text-[12px] text-device-ink-2">
+                  <span>Now</span>
+                  <span className="font-semibold text-device-ink">OK</span>
                 </div>
               </m.div>
             )}
@@ -86,7 +86,7 @@ export function HandsetPreview({ messageId, message, className }: HandsetPreview
         </div>
       </m.div>
 
-      <div role="radiogroup" aria-label="Plateforme de l'aperçu" className="flex rounded-[8px] bg-surface-sunken p-1 text-[12px]">
+      <div role="radiogroup" aria-label="Preview platform" className="flex rounded-[8px] bg-surface-sunken p-1 text-[12px]">
         {(["android", "ios"] as const).map((p) => (
           <button
             key={p}
@@ -101,7 +101,7 @@ export function HandsetPreview({ messageId, message, className }: HandsetPreview
         ))}
       </div>
       <figcaption className="max-w-[300px] text-center text-[12px] leading-[18px] text-ink-3">
-        Aperçu indicatif. Le titre et le son dépendent du téléphone ; seule la zone de texte est contrôlée par la console.
+        Indicative preview. The title and sound depend on the handset; only the text body is controlled by the console.
       </figcaption>
     </figure>
   );

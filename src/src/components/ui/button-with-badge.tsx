@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export interface ButtonWithBadgeProps extends React.ComponentProps<typeof Button> {
-  /** Le contenu du badge (nombre, texte court) */
+  /** Badge content (number, short text) */
   badge?: string | number;
-  /** Variante du badge */
+  /** Badge variant */
   badgeVariant?: "default" | "primary" | "danger" | "warning" | "success";
-  /** Position du badge */
+  /** Badge position */
   badgePosition?: "right" | "left";
 }
 

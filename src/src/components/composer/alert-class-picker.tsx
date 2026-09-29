@@ -37,7 +37,7 @@ function Tile({ cls, selected, disabled, onSelect, presidential = false }: {
       aria-disabled={disabled}
       disabled={disabled}
       onClick={onSelect}
-      title={disabled ? "Réservé aux administrateurs" : undefined}
+      title={disabled ? "Administrators only" : undefined}
       className={cn(
         "relative flex h-full w-full flex-col items-start gap-1 rounded-[12px] border bg-shell p-4 pl-5 text-left transition-colors duration-150",
         "before:absolute before:inset-y-3 before:left-0 before:w-1 before:rounded-r",
@@ -53,7 +53,7 @@ function Tile({ cls, selected, disabled, onSelect, presidential = false }: {
       <span className="flex w-full items-center gap-2">
         <Icon aria-hidden className={cn("size-[18px] shrink-0", style.fg)} />
         <span className="font-display text-[16px] leading-5 font-semibold text-ink">{cls.label}</span>
-        {!cls.optOut && <LockKeyhole aria-label="Sans désactivation possible" className="size-3.5 text-ink-3" />}
+        {!cls.optOut && <LockKeyhole aria-label="Cannot be disabled" className="size-3.5 text-ink-3" />}
         <span className="ml-auto font-mono text-[12px] text-ink-3 tabular-nums">{range}</span>
       </span>
       <span className="text-[13px] leading-5 text-ink-3">{cls.description}</span>
@@ -71,7 +71,7 @@ export function AlertClassPicker({ value, onChange, allowed }: AlertClassPickerP
   return (
     <div className="space-y-5">
       <div role="radiogroup" aria-label="CMAS Alert Class" className="space-y-3">
-        <p className="text-[11px] font-semibold tracking-[0.08em] text-ink-3 uppercase">CMAS · alertes publiques</p>
+        <p className="text-[11px] font-semibold tracking-[0.08em] text-ink-3 uppercase">CMAS · public alerts</p>
         {presidential && (
           <Tile
             cls={presidential}
@@ -94,8 +94,8 @@ export function AlertClassPicker({ value, onChange, allowed }: AlertClassPickerP
         </div>
       </div>
 
-      <div role="radiogroup" aria-label="Classe d'alerte ETWS" className="space-y-3">
-        <p className="text-[11px] font-semibold tracking-[0.08em] text-ink-3 uppercase">ETWS · séisme et tsunami</p>
+      <div role="radiogroup" aria-label="ETWS Alert Class" className="space-y-3">
+        <p className="text-[11px] font-semibold tracking-[0.08em] text-ink-3 uppercase">ETWS · earthquake and tsunami</p>
         <div className="grid gap-2 sm:grid-cols-2">
           {ETWS.map((cls) => (
             <Tile
@@ -111,7 +111,7 @@ export function AlertClassPicker({ value, onChange, allowed }: AlertClassPickerP
 
       {selectedClass && selectedClass.messageIds.length > 1 && value !== null && (
         <label className="flex flex-wrap items-center gap-3 rounded-[12px] bg-surface-sunken px-4 py-3 text-[13px] text-ink-2">
-          Identifiant précis ({selectedClass.label})
+          Exact identifier ({selectedClass.label})
           <select
             value={value}
             onChange={(e) => onChange(Number(e.target.value))}

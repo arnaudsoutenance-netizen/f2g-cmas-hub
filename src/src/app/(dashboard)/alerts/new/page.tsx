@@ -22,12 +22,13 @@ import { formatDuration } from "@/lib/cmas/composer-utils";
 import { pageEnter } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import type { AlertCreateInput } from "@/types/domain";
+import { cellState } from "@/lib/cmas/cell-state";
 
 const STEPS = [
-  { id: "classe", label: "Classe" },
+  { id: "classe", label: "Class" },
   { id: "message", label: "Message" },
-  { id: "cellules", label: "Cellules" },
-  { id: "duree", label: "Durée et envoi" },
+  { id: "cellules", label: "Cells" },
+  { id: "duree", label: "Duration and send" },
 ] as const;
 
 function Section({ id, index, title, children }: { id: string; index: number; title: string; children: React.ReactNode }) {
@@ -44,7 +45,7 @@ function Section({ id, index, title, children }: { id: string; index: number; ti
 
 function errorText(error: unknown): string {
   if (error instanceof ApiError) return error.message;
-  return "La diffusion a échoué. Réessayez.";
+  return "Broadcast failed. Please try again.";
 }
 
 function Composer() {
@@ -76,7 +77,7 @@ function Composer() {
     setDurationS(tpl.default_duration);
   };
 
-  // Prefill from ?template=<id> once templates are loaded (e.g. "Utiliser" in the gallery).
+  // Prefill from ?template=<id> once templates are loaded (e.g. "Use" in the gallery).
   const templateParam = searchParams.get("template");
   if (templateParam && templates && appliedTemplateParam !== templateParam) {
     setAppliedTemplateParam(templateParam);
@@ -87,7 +88,7 @@ function Composer() {
     setMessageId(id);
     // Presidential alerts are national by default.
     if (classifyMessageId(id)?.confirmLevel === "presidential" && cellIds.length === 0 && cells) {
-      setCellIds(cells.filter((c) => c.status === "active").map((c) => c.id));
+      setCellIds(cells.filter((c) => cellState(c.status) === "online").map((c) => c.id));
     }
   };
 
@@ -98,13 +99,13 @@ function Composer() {
     duree: true,
   };
   const blocker = !done.classe
-    ? "Choisissez une classe d'alerte."
+    ? "Choose an alert class."
     : !done.message
       ? message.trim().length === 0
-        ? "Rédigez le message."
-        : "Le message dépasse la taille maximale."
+        ? "Write the message."
+        : "The message exceeds the maximum size."
       : !done.cellules
-        ? "Sélectionnez au moins une cellule."
+        ? "Select at least one cell."
         : null;
 
   const payload = (): AlertCreateInput | null =>
@@ -124,10 +125,10 @@ function Composer() {
     if (!input) return;
     createAlert.mutate(input, {
       onSuccess: (alert) => {
-        toast.success("Brouillon enregistré");
+        toast.success("Draft saved");
         router.push(`/alerts/${alert.id}`);
       },
-      onError: (error) => toast.error("Enregistrement impossible", { description: errorText(error) }),
+      onError: (error) => toast.error("Could not save", { description: errorText(error) }),
     });
   };
 
@@ -144,10 +145,10 @@ function Composer() {
             onSuccess: (result) => {
               setConfirmOpen(false);
               router.push(`/alerts/${result.id}`);
-              toast.success("Diffusion lancée", { description: result.message });
+              toast.success("Broadcast started", { description: result.message });
             },
             onError: (error) => {
-              setSendError(`Alerte créée en brouillon mais non diffusée : ${errorText(error)}`);
+              setSendError(`Alert saved as draft but not broadcast: ${errorText(error)}`);
               router.prefetch(`/alerts/${alert.id}`);
             },
           },
@@ -162,19 +163,19 @@ function Composer() {
     <m.div {...pageEnter} className="space-y-5">
       <header className="flex flex-wrap items-center justify-between gap-4 rounded-[12px] bg-shell px-5 py-4 sm:px-6">
         <div>
-          <h1 className="font-display text-[24px] leading-[30px] font-semibold text-ink">Nouvelle alerte</h1>
-          <p className="text-[13px] text-ink-3">Classe, message, cellules, durée : vérifiez l&apos;aperçu avant de diffuser.</p>
+          <h1 className="font-display text-[24px] leading-[30px] font-semibold text-ink">New alert</h1>
+          <p className="text-[13px] text-ink-3">Class, message, cells, duration: check the preview before broadcasting.</p>
         </div>
         {templates && templates.length > 0 && (
           <label className="flex items-center gap-2 text-[13px] text-ink-2">
             <LibraryBig aria-hidden className="size-4" />
-            <span className="sr-only sm:not-sr-only">Charger un modèle</span>
+            <span className="sr-only sm:not-sr-only">Load a template</span>
             <select
               value={templateId ?? ""}
               onChange={(e) => e.target.value && applyTemplate(e.target.value)}
               className="h-10 max-w-[260px] rounded-[8px] border border-control-border bg-shell px-3 text-[13px] text-ink"
             >
-              <option value="">Choisir un modèle…</option>
+              <option value="">Choose a template…</option>
               {templates.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name} · {t.message_id}
@@ -186,7 +187,7 @@ function Composer() {
       </header>
 
       <div className="grid gap-5 lg:grid-cols-12">
-        <nav aria-label="Étapes" className="hidden lg:col-span-2 lg:block">
+        <nav aria-label="Steps" className="hidden lg:col-span-2 lg:block">
           <ol className="sticky top-28 space-y-1 rounded-[12px] bg-shell p-3">
             {STEPS.map((step, i) => (
               <li key={step.id}>
@@ -210,16 +211,16 @@ function Composer() {
         </nav>
 
         <div className="space-y-5 lg:col-span-6">
-          <Section id="classe" index={1} title="Classe d'alerte">
+          <Section id="classe" index={1} title="Alert class">
             <AlertClassPicker value={messageId} onChange={onClassChange} />
           </Section>
           <Section id="message" index={2} title="Message">
             <MessageComposer value={message} onChange={setMessage} />
           </Section>
-          <Section id="cellules" index={3} title="Cellules ciblées">
+          <Section id="cellules" index={3} title="Target cells">
             <CellTargetSelector value={cellIds} onChange={setCellIds} presidential={alertClass?.confirmLevel === "presidential"} />
           </Section>
-          <Section id="duree" index={4} title="Durée et envoi">
+          <Section id="duree" index={4} title="Duration and send">
             <DurationField value={durationS} onChange={setDurationS} />
           </Section>
         </div>
@@ -228,24 +229,24 @@ function Composer() {
           <div className="sticky top-28 space-y-4 rounded-[12px] bg-shell p-5">
             <HandsetPreview messageId={messageId} message={message} />
             <dl className="grid grid-cols-[96px_1fr] gap-y-1.5 border-t border-hairline pt-4 text-[13px]">
-              <dt className="text-ink-3">Classe</dt>
+              <dt className="text-ink-3">Class</dt>
               <dd>{messageId !== null ? <SeverityBadge messageId={messageId} size="sm" /> : <span className="text-ink-3">—</span>}</dd>
-              <dt className="text-ink-3">Cellules</dt>
+              <dt className="text-ink-3">Cells</dt>
               <dd className="font-mono text-ink tabular-nums">{cellIds.length}</dd>
-              <dt className="text-ink-3">Encodage</dt>
+              <dt className="text-ink-3">Encoding</dt>
               <dd className="font-mono text-ink">
-                {sizing.encoding} · {message ? sizing.pages : 0} p.
+                {sizing.encoding} · {message ? sizing.pages : 0} pg
               </dd>
-              <dt className="text-ink-3">Durée</dt>
-              <dd className="font-mono text-ink">{formatDuration(durationS)} · immédiat</dd>
+              <dt className="text-ink-3">Duration</dt>
+              <dd className="font-mono text-ink">{formatDuration(durationS)} · immediate</dd>
             </dl>
             <div className="space-y-2">
               <Button size="lg" className="w-full rounded-[8px]" disabled={blocker !== null || pending} onClick={() => setConfirmOpen(true)}>
-                Vérifier et diffuser
+                Review and broadcast
               </Button>
               {blocker && <p className="text-center text-[12px] text-ink-3">{blocker}</p>}
               <Button variant="ghost" size="md" className="w-full" disabled={blocker !== null || pending} onClick={saveDraft}>
-                <Save aria-hidden className="size-4" /> Enregistrer le brouillon
+                <Save aria-hidden className="size-4" /> Save draft
               </Button>
             </div>
           </div>

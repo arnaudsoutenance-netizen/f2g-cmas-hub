@@ -22,7 +22,7 @@ export function KpiInstrumentPanel() {
   const { data: stats, isPending, isError, error, refetch } = useStats();
 
   if (isError) {
-    return <ErrorState title="Impossible de charger les indicateurs" error={error} onRetry={() => void refetch()} />;
+    return <ErrorState title="Could not load indicators" error={error} onRetry={() => void refetch()} />;
   }
 
   if (isPending) {
@@ -42,9 +42,9 @@ export function KpiInstrumentPanel() {
   const { alerts, today, success_rate: rate } = stats;
   const ledger: LedgerSegment[] = [
     { status: "SENT", label: "Sent", value: alerts.sent, bar: "bg-st-sent" },
-    { status: "SCHEDULED", label: "Programmées", value: alerts.scheduled, bar: "bg-st-scheduled" },
+    { status: "SCHEDULED", label: "Scheduled", value: alerts.scheduled, bar: "bg-st-scheduled" },
     { status: "DRAFT", label: "Drafts", value: alerts.draft, bar: "bg-st-draft/70" },
-    { status: "FAILED", label: "Échecs", value: alerts.failed, bar: "bg-st-failed" },
+    { status: "FAILED", label: "Failed", value: alerts.failed, bar: "bg-st-failed" },
   ];
   const ledgerTotal = Math.max(1, ledger.reduce((sum, s) => sum + s.value, 0));
   // The API reports 100 % when nothing has been sent yet; that is not a success rate.
@@ -52,9 +52,9 @@ export function KpiInstrumentPanel() {
   const rateTone = !hasDeliveries ? "text-ink-3" : rate < 90 ? "text-danger" : rate < 95 ? "text-sev-severe-fg" : "text-ink";
 
   return (
-    <section aria-label="Indicateurs" className="grid rounded-[var(--radius-lg)] border border-hairline bg-surface lg:grid-cols-12">
+    <section aria-label="Indicators" className="grid rounded-[var(--radius-lg)] border border-hairline bg-surface lg:grid-cols-12">
       <div className="p-5 lg:col-span-3">
-        <p className={overline}>Taux de succès</p>
+        <p className={overline}>Success rate</p>
         <p className={cn("mt-3 flex items-baseline gap-1 text-[48px] leading-[48px] font-medium tracking-[-0.03em]", rateTone)}>
           {hasDeliveries ? (
             <>
@@ -102,19 +102,19 @@ export function KpiInstrumentPanel() {
       </div>
 
       <div className="border-t border-hairline p-5 lg:col-span-3 lg:border-t-0 lg:border-l">
-        <p className={overline}>Aujourd&apos;hui</p>
+        <p className={overline}>Today</p>
         <dl className="mt-3 space-y-3">
           <div className="flex items-baseline gap-3">
             <dd className="text-[28px] leading-8 font-medium tracking-[-0.02em] text-ink">
               <CountUp value={today.sent} />
             </dd>
-            <dt className="text-[13px] text-ink-2">envoyées</dt>
+            <dt className="text-[13px] text-ink-2">sent</dt>
           </div>
           <div className="flex items-baseline gap-3">
             <dd className="text-[28px] leading-8 font-medium tracking-[-0.02em] text-ink">
               <CountUp value={today.scheduled} />
             </dd>
-            <dt className="text-[13px] text-ink-2">programmées</dt>
+            <dt className="text-[13px] text-ink-2">scheduled</dt>
           </div>
         </dl>
       </div>

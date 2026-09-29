@@ -1,7 +1,7 @@
 "use client";
 
 import { formatDistanceToNowStrict } from "date-fns";
-import { fr } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import { m } from "framer-motion";
 import Link from "next/link";
 import { AlertStatusPill } from "@/components/alerts/alert-status-pill";
@@ -64,7 +64,7 @@ export function ActivityFeed({
                 <span>·</span>
                 <span>
                   {formatDistanceToNowStrict(new Date(alert.created_at), {
-                    locale: fr,
+                    locale: enUS,
                     addSuffix: true,
                   })}
                 </span>
@@ -80,7 +80,7 @@ export function ActivityFeed({
   );
 }
 
-// Version compacte pour sidebar ou widgets
+// Compact version for the sidebar or widgets
 export function ActivityFeedCompact({
   alerts,
   maxItems = 3,
@@ -119,7 +119,7 @@ export function ActivityFeedCompact({
           </span>
           <span className="shrink-0 font-mono text-[10px] text-ink-3">
             {formatDistanceToNowStrict(new Date(alert.created_at), {
-              locale: fr,
+              locale: enUS,
             })}
           </span>
         </Link>

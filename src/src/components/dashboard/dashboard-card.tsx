@@ -8,9 +8,9 @@ import { cn } from "@/lib/utils";
 export interface DashboardCardProps {
   children: React.ReactNode;
   className?: string;
-  /** Animation d'entrée */
+  /** Entrance animation */
   animate?: boolean;
-  /** Délai d'animation */
+  /** Animation delay */
   delay?: number;
 }
 
@@ -47,7 +47,7 @@ export function DashboardCard({
   return <div className={baseClassName}>{children}</div>;
 }
 
-// Header de card avec titre et action optionnelle
+// Card header with title and optional action
 export interface DashboardCardHeaderProps {
   title: string;
   subtitle?: string;
@@ -74,7 +74,7 @@ export function DashboardCardHeader({
   );
 }
 
-// Metric card - pour les KPIs
+// Metric card for KPIs
 export interface MetricCardProps {
   label: string;
   value: string | number;
@@ -123,7 +123,7 @@ export function MetricCard({
 
     const content = (
       <>
-        {/* Cercles décoratifs Berry */}
+        {/* Berry decorative circles */}
         <div className="pointer-events-none absolute -right-6 -top-6 size-24 rounded-full bg-white/10" />
         <div className="pointer-events-none absolute -bottom-3 -right-3 size-16 rounded-full bg-white/5" />
 
@@ -220,7 +220,7 @@ export function MetricCard({
   return <div className={baseClassName}>{content}</div>;
 }
 
-// Grid pour organiser les cards
+// Grid to lay out cards
 export interface DashboardGridProps {
   children: React.ReactNode;
   columns?: 2 | 3 | 4;

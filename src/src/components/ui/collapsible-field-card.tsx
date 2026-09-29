@@ -6,29 +6,29 @@ import { ChevronDown, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface CollapsibleFieldCardProps {
-  /** Titre de la section */
+  /** Section title */
   title: string;
-  /** Sous-titre ou description courte */
+  /** Subtitle or short description */
   subtitle?: string;
-  /** Icône à gauche du titre */
+  /** Icon to the left of the title */
   icon?: LucideIcon;
-  /** Badge à afficher (ex: "Requis", compteur) */
+  /** Badge to display (e.g. "Required", counter) */
   badge?: React.ReactNode;
-  /** État d'erreur */
+  /** Error state */
   hasError?: boolean;
-  /** État de succès/validé */
+  /** Success/validated state */
   isValid?: boolean;
-  /** Ouvert par défaut */
+  /** Open by default */
   defaultOpen?: boolean;
-  /** Contrôle externe de l'état ouvert */
+  /** External control of the open state */
   open?: boolean;
-  /** Callback quand l'état change */
+  /** Callback when the state changes */
   onOpenChange?: (open: boolean) => void;
-  /** Désactivé */
+  /** Disabled */
   disabled?: boolean;
-  /** Contenu de la card */
+  /** Card content */
   children: React.ReactNode;
-  /** Classes CSS additionnelles */
+  /** Additional CSS classes */
   className?: string;
 }
 
@@ -161,10 +161,10 @@ export function CollapsibleFieldCard({
   );
 }
 
-// Version groupe - plusieurs cards qui s'excluent mutuellement (accordion)
+// Group version: several mutually exclusive cards (accordion)
 export interface CollapsibleFieldGroupProps {
   children: React.ReactElement<CollapsibleFieldCardProps>[];
-  /** Un seul ouvert à la fois */
+  /** Only one open at a time */
   singleOpen?: boolean;
   className?: string;
 }

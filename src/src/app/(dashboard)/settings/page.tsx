@@ -168,7 +168,7 @@ export default function SettingsPage() {
               <div className="flex items-center gap-2">
                 <Database className="h-4 w-4 text-muted-foreground" />
                 <span>Backend:</span>
-                <span className="text-emerald-600 font-medium">Connected</span>
+                <span className="text-st-sent-fg font-medium">Connected</span>
               </div>
             </div>
           </CardContent>

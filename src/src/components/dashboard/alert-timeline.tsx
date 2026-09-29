@@ -1,7 +1,7 @@
 "use client";
 
 import { format, isToday, isYesterday } from "date-fns";
-import { fr } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import { m } from "framer-motion";
 import { ArrowRight, BellRing } from "lucide-react";
 import Link from "next/link";
@@ -18,9 +18,9 @@ import { cn } from "@/lib/utils";
 import type { Alert } from "@/types/domain";
 
 function dayLabel(date: Date): string {
-  if (isToday(date)) return "Aujourd'hui";
-  if (isYesterday(date)) return "Hier";
-  return format(date, "EEEE d MMMM", { locale: fr });
+  if (isToday(date)) return "Today";
+  if (isYesterday(date)) return "Yesterday";
+  return format(date, "EEEE, MMMM d", { locale: enUS });
 }
 
 function eventDate(alert: Alert): Date {
@@ -110,9 +110,9 @@ export function AlertTimeline({ limit = 8 }: { limit?: number }) {
                         <SeverityBadge messageId={alert.message_id} size="sm" />
                         <AlertStatusPill status={alert.status} scheduledAt={alert.scheduled_at} size="sm" />
                       </div>
-                      <p className="mt-1.5 line-clamp-2 text-[13px] leading-5 text-ink-2">« {alert.content} »</p>
+                      <p className="mt-1.5 line-clamp-2 text-[13px] leading-5 text-ink-2">“{alert.content}”</p>
                       <p className="mt-1 text-[12px] text-ink-3">
-                        {alert.cells.length} cell{alert.cells.length > 1 ? "s" : ""}
+                        {alert.cells.length} cell{alert.cells.length === 1 ? "" : "s"}
                       </p>
                     </div>
                     <ArrowRight aria-hidden className="mt-1 size-4 shrink-0 text-ink-3 opacity-0 transition-opacity group-hover:opacity-100" />

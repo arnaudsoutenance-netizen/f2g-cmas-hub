@@ -36,7 +36,7 @@ export function SessionGate({ children }: { children: React.ReactNode }) {
   if (!hydrated || !token) {
     return (
       <div className="grid min-h-dvh place-items-center bg-canvas" aria-busy="true">
-        <span className="text-[13px] text-ink-3">Vérification de la session…</span>
+        <span className="text-[13px] text-ink-3">Checking session…</span>
       </div>
     );
   }

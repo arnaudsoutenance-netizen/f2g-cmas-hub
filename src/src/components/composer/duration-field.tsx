@@ -76,10 +76,10 @@ export function DurationField({ value, onChange }: { value: number; onChange: (s
       </div>
 
       <fieldset className="space-y-2">
-        <legend className="text-[13px] font-medium text-ink-2">Envoi</legend>
+        <legend className="text-[13px] font-medium text-ink-2">Send</legend>
         <div className="grid gap-2 sm:grid-cols-2">
           <span className="flex items-center gap-3 rounded-[12px] border border-primary bg-navy-tint px-4 py-3 text-[14px] font-medium text-primary">
-            <Clock aria-hidden className="size-4" /> Immédiat
+            <Clock aria-hidden className="size-4" /> Immediate
           </span>
           <span
             aria-disabled
@@ -87,7 +87,7 @@ export function DurationField({ value, onChange }: { value: number; onChange: (s
           >
             <CalendarClock aria-hidden className="mt-0.5 size-4 shrink-0" />
             <span>
-              <span className="block font-medium text-ink-2">Programmé · indisponible</span>
+              <span className="block font-medium text-ink-2">Scheduled · unavailable</span>
               The server does not have a scheduler yet: a scheduled alert would never be sent.
             </span>
           </span>

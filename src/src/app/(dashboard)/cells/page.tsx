@@ -1,184 +1,113 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { RadioTower, CheckCircle2, XCircle, Signal, Wifi } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { formatDistanceToNowStrict } from "date-fns";
+import { enUS } from "date-fns/locale";
+import { CircleCheck, CircleHelp, CircleX, RadioTower, Wrench, type LucideIcon } from "lucide-react";
+import { Panel } from "@/components/dashboard/panel";
+import { EmptyState, ErrorState } from "@/components/shared/states";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCells } from "@/hooks/use-network";
+import { CELL_STATE_LABEL, cellState, type CellState } from "@/lib/cmas/cell-state";
+import { groupCellsByRegion } from "@/lib/cmas/composer-utils";
+import { cn } from "@/lib/utils";
 
-interface Cell {
-  id: string;
-  name: string;
-  tac: number;
-  status: "online" | "offline";
-  signalStrength?: number;
-  lastSeen?: string;
-}
+const STATE_STYLE: Record<CellState, { icon: LucideIcon; text: string; chip: string }> = {
+  online: { icon: CircleCheck, text: "text-st-sent-fg", chip: "bg-st-sent-tint text-st-sent-fg" },
+  offline: { icon: CircleX, text: "text-st-failed-fg", chip: "bg-st-failed-tint text-st-failed-fg" },
+  maintenance: { icon: Wrench, text: "text-sev-severe-fg", chip: "bg-sev-severe-tint text-sev-severe-fg" },
+  unknown: { icon: CircleHelp, text: "text-ink-3", chip: "bg-surface-sunken text-ink-2" },
+};
 
-async function fetchCells(): Promise<Cell[]> {
-  const res = await fetch("/api/cells");
-  if (!res.ok) throw new Error("Failed to fetch cells");
-  return res.json();
-}
-
+/** Cell sites grouped by region; offline sites first in each group. */
 export default function CellsPage() {
-  const { data: cells, isLoading, isError } = useQuery({
-    queryKey: ["cells"],
-    queryFn: fetchCells,
-  });
+  const { data: cells, isPending, isError, error, refetch, dataUpdatedAt } = useCells();
 
-  if (isLoading) {
-    return (
-      <div className="p-6 space-y-6">
-        <h1 className="text-2xl font-semibold text-foreground">Cells</h1>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} className="h-32 rounded-xl" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (isError || !cells) {
-    return (
-      <div className="p-6 space-y-6">
-        <h1 className="text-2xl font-semibold text-foreground">Cells</h1>
-        <Card className="border-destructive/50 bg-destructive/5">
-          <CardContent className="p-6 text-center">
-            <XCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
-            <p className="text-destructive font-medium">Unable to load cells</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Check that the backend is running
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const onlineCells = cells.filter((c) => c.status === "online");
-  const offlineCells = cells.filter((c) => c.status === "offline");
+  const counts = { online: 0, offline: 0, maintenance: 0, unknown: 0 } satisfies Record<CellState, number>;
+  for (const cell of cells ?? []) counts[cellState(cell.status)] += 1;
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-foreground">Cells</h1>
-        <div className="flex items-center gap-4 text-sm">
-          <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            {onlineCells.length} online
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-red-500" />
-            {offlineCells.length} offline
-          </span>
+    <div className="space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="font-display text-[28px] leading-tight font-bold text-ink">Cells</h1>
+          <p className="mt-0.5 text-[14px] text-ink-3">
+            eNodeB / gNodeB sites that receive broadcasts
+            {dataUpdatedAt > 0 ? ` · updated ${formatDistanceToNowStrict(dataUpdatedAt, { locale: enUS })} ago` : ""}
+          </p>
         </div>
-      </div>
+      </header>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Cells
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <RadioTower className="h-5 w-5 text-primary" />
-              <span className="text-3xl font-bold">{cells.length}</span>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Online
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-              <span className="text-3xl font-bold text-emerald-600">
-                {onlineCells.length}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Offline
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <XCircle className="h-5 w-5 text-red-500" />
-              <span className="text-3xl font-bold text-red-600">
-                {offlineCells.length}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Cells Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {cells.map((cell) => (
-          <Card
-            key={cell.id}
-            className={`transition-all hover:shadow-md ${
-              cell.status === "offline" ? "opacity-60" : ""
-            }`}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`p-2 rounded-lg ${
-                      cell.status === "online"
-                        ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400"
-                        : "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
-                    }`}
-                  >
-                    <RadioTower className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">{cell.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      TAC: {cell.tac}
-                    </p>
-                  </div>
+      {isError ? (
+        <ErrorState title="Unable to load cells" error={error} onRetry={() => void refetch()} />
+      ) : isPending ? (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3" aria-busy>
+          {Array.from({ length: 6 }, (_, i) => (
+            <Skeleton key={i} className="h-32 rounded-[16px]" />
+          ))}
+        </div>
+      ) : cells.length === 0 ? (
+        <EmptyState icon={RadioTower} title="No cell site yet" description="Cell sites are added by an administrator from the backend." />
+      ) : (
+        <>
+          <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {(Object.keys(counts) as CellState[]).map((state) => {
+              const { icon: Icon, text } = STATE_STYLE[state];
+              return (
+                <div key={state} className="rounded-[16px] border border-hairline bg-surface p-4 shadow-e1">
+                  <dt className={cn("flex items-center gap-1.5 text-[12px] font-semibold tracking-[0.08em] uppercase", text)}>
+                    <Icon aria-hidden className="size-3.5" />
+                    {CELL_STATE_LABEL[state]}
+                  </dt>
+                  <dd className="tnum mt-2 font-display text-[32px] leading-none font-bold text-ink">{counts[state]}</dd>
                 </div>
-                <Badge
-                  variant={cell.status === "online" ? "default" : "destructive"}
-                  className={
-                    cell.status === "online"
-                      ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400"
-                      : ""
-                  }
-                >
-                  {cell.status}
-                </Badge>
-              </div>
+              );
+            })}
+          </dl>
 
-              {cell.status === "online" && (
-                <div className="mt-4 flex items-center gap-4 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Signal className="h-3 w-3" />
-                    {cell.signalStrength ?? "-"} dBm
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Wifi className="h-3 w-3" />
-                    Connected
-                  </span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+          {groupCellsByRegion(cells).map(([region, group]) => (
+            <Panel key={region} title={region} description={`${group.length} site${group.length === 1 ? "" : "s"}`}>
+              <ul className="-mr-px -mb-px grid md:grid-cols-2 xl:grid-cols-3">
+                {[...group]
+                  .sort((a, b) => Number(cellState(a.status) === "online") - Number(cellState(b.status) === "online") || a.name.localeCompare(b.name, "en"))
+                  .map((cell) => {
+                    const state = cellState(cell.status);
+                    const { icon: Icon, chip } = STATE_STYLE[state];
+                    return (
+                      <li key={cell.id} className="space-y-3 border-r border-b border-hairline p-5">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate font-semibold text-ink">{cell.name}</p>
+                            <p className="font-mono text-[12px] text-ink-3">{cell.cell_id}</p>
+                          </div>
+                          <span className={cn("inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-medium", chip)}>
+                            <Icon aria-hidden className="size-3.5" />
+                            {CELL_STATE_LABEL[state]}
+                          </span>
+                        </div>
+                        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[12px]">
+                          <dt className="text-ink-3">eNodeB</dt>
+                          <dd className="truncate font-mono text-ink-2">{cell.enb_ip}</dd>
+                          {cell.location ? (
+                            <>
+                              <dt className="text-ink-3">Location</dt>
+                              <dd className="truncate text-ink-2">{cell.location}</dd>
+                            </>
+                          ) : null}
+                          <dt className="text-ink-3">Last seen</dt>
+                          <dd className="text-ink-2">
+                            {cell.last_seen
+                              ? formatDistanceToNowStrict(new Date(cell.last_seen), { addSuffix: true, locale: enUS })
+                              : "Never"}
+                          </dd>
+                        </dl>
+                      </li>
+                    );
+                  })}
+              </ul>
+            </Panel>
+          ))}
+        </>
+      )}
     </div>
   );
 }

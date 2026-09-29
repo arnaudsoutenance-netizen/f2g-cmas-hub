@@ -22,7 +22,7 @@ import { useSessionStore } from "@/lib/stores/session-store";
 import { cn } from "@/lib/utils";
 import { NetworkStatus } from "./network-status";
 
-const ROLE_LABELS = { ADMIN: "Administrateur", OPERATOR: "Opérateur", VIEWER: "Lecture seule" } as const;
+const ROLE_LABELS = { ADMIN: "Administrator", OPERATOR: "Operator", VIEWER: "Read-only" } as const;
 
 function initials(name: string): string {
   return name
@@ -43,11 +43,11 @@ function ActiveAlertsBell() {
     <Link
       href="/alerts?status=SENDING"
       aria-label={count > 0 ? `${count} alert(s) currently broadcasting` : "No active alerts"}
-      className={cn(tintButton, "relative bg-orange-tint text-orange-fg hover:bg-orange-deep hover:text-white")}
+      className={cn(tintButton, "relative bg-orange-tint text-orange-fg hover:bg-orange-deep hover:text-orange-on")}
     >
       <Bell aria-hidden className="size-[18px]" />
       {count > 0 && (
-        <span className="absolute -top-1 -right-1 grid min-w-4 place-items-center rounded-full bg-st-failed px-1 text-[10px] leading-4 font-semibold text-white tabular-nums">
+        <span className="absolute -top-1 -right-1 grid min-w-4 place-items-center rounded-full bg-st-failed px-1 text-[10px] leading-4 font-semibold text-st-on tabular-nums">
           {count}
         </span>
       )}
@@ -71,7 +71,7 @@ export function TopBar({ onToggleMenu, onOpenMobileMenu }: { onToggleMenu: () =>
         <button
           type="button"
           onClick={onToggleMenu}
-          aria-label="Replier ou déplier la navigation"
+          aria-label="Collapse or expand navigation"
           className={cn(tintButton, "hidden bg-navy-tint text-primary hover:bg-primary hover:text-primary-foreground lg:grid")}
         >
           <Menu aria-hidden className="size-[18px]" />
@@ -79,7 +79,7 @@ export function TopBar({ onToggleMenu, onOpenMobileMenu }: { onToggleMenu: () =>
         <button
           type="button"
           onClick={onOpenMobileMenu}
-          aria-label="Ouvrir la navigation"
+          aria-label="Open navigation"
           className={cn(tintButton, "bg-navy-tint text-primary lg:hidden")}
         >
           <Menu aria-hidden className="size-[18px]" />
@@ -106,12 +106,15 @@ export function TopBar({ onToggleMenu, onOpenMobileMenu }: { onToggleMenu: () =>
       <div className="hidden xl:block">
         <NetworkStatus />
       </div>
+      <div className="xl:hidden">
+        <NetworkStatus compact />
+      </div>
 
       <ActiveAlertsBell />
 
       <DropdownMenu>
         <DropdownMenuTrigger
-          aria-label="Menu du compte"
+          aria-label="Account menu"
           className="flex h-12 items-center gap-2 rounded-[27px] bg-navy-tint py-1 pr-3 pl-1.5 transition-colors hover:bg-primary [&:hover_svg]:text-primary-foreground"
         >
           <span className="grid size-[34px] place-items-center rounded-full bg-primary text-[12px] font-semibold text-primary-foreground">
@@ -123,7 +126,7 @@ export function TopBar({ onToggleMenu, onOpenMobileMenu }: { onToggleMenu: () =>
           {user && (
             <DropdownMenuGroup>
               <DropdownMenuLabel className="py-2">
-                <span className="block truncate text-[14px] font-semibold text-ink">Bonjour, {user.name}</span>
+                <span className="block truncate text-[14px] font-semibold text-ink">Hello, {user.name}</span>
                 <span className="block truncate text-[12px] font-normal text-ink-3">{user.email}</span>
                 <span className="mt-1 inline-block rounded-full bg-navy-tint px-2 py-0.5 text-[11px] font-medium text-primary">
                   {ROLE_LABELS[user.role]}
@@ -133,16 +136,16 @@ export function TopBar({ onToggleMenu, onOpenMobileMenu }: { onToggleMenu: () =>
           )}
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <DropdownMenuLabel className="text-[11px] font-semibold tracking-[0.08em] text-ink-3 uppercase">Thème</DropdownMenuLabel>
+            <DropdownMenuLabel className="text-[11px] font-semibold tracking-[0.08em] text-ink-3 uppercase">Theme</DropdownMenuLabel>
             <DropdownMenuRadioGroup value={theme ?? "system"} onValueChange={(value: string) => setTheme(value)}>
               <DropdownMenuRadioItem value="system">
-                <Monitor className="size-4" /> Système
+                <Monitor className="size-4" /> System
               </DropdownMenuRadioItem>
               <DropdownMenuRadioItem value="light">
-                <Sun className="size-4" /> Clair
+                <Sun className="size-4" /> Light
               </DropdownMenuRadioItem>
               <DropdownMenuRadioItem value="dark">
-                <Moon className="size-4" /> Sombre
+                <Moon className="size-4" /> Dark
               </DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>
           </DropdownMenuGroup>
@@ -156,7 +159,7 @@ export function TopBar({ onToggleMenu, onOpenMobileMenu }: { onToggleMenu: () =>
               router.replace("/login");
             }}
           >
-            <LogOut className="size-4" /> Se déconnecter
+            <LogOut className="size-4" /> Sign out
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

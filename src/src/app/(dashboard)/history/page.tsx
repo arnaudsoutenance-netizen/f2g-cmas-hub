@@ -26,21 +26,21 @@ async function fetchAlertHistory(): Promise<Alert[]> {
 const statusConfig = {
   sent: {
     icon: CheckCircle2,
-    color: "text-emerald-600",
-    bg: "bg-emerald-100 dark:bg-emerald-900/30",
-    badge: "bg-emerald-100 text-emerald-700 hover:bg-emerald-100",
+    color: "text-st-sent-fg",
+    bg: "bg-st-sent-tint",
+    badge: "bg-st-sent-tint text-st-sent-fg hover:bg-st-sent-tint",
   },
   failed: {
     icon: XCircle,
-    color: "text-red-600",
-    bg: "bg-red-100 dark:bg-red-900/30",
-    badge: "bg-red-100 text-red-700 hover:bg-red-100",
+    color: "text-st-failed-fg",
+    bg: "bg-st-failed-tint",
+    badge: "bg-st-failed-tint text-st-failed-fg hover:bg-st-failed-tint",
   },
   cancelled: {
     icon: AlertTriangle,
-    color: "text-amber-600",
-    bg: "bg-amber-100 dark:bg-amber-900/30",
-    badge: "bg-amber-100 text-amber-700 hover:bg-amber-100",
+    color: "text-st-cancelled-fg",
+    bg: "bg-st-cancelled-tint",
+    badge: "bg-st-cancelled-tint text-st-cancelled-fg hover:bg-st-cancelled-tint",
   },
 };
 
@@ -105,7 +105,7 @@ export default function HistoryPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+              <CheckCircle2 className="h-5 w-5 text-st-sent" />
               <span className="text-3xl font-bold">
                 {alerts?.filter((a) => a.status === "sent").length ?? 0}
               </span>
@@ -120,7 +120,7 @@ export default function HistoryPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <XCircle className="h-5 w-5 text-red-500" />
+              <XCircle className="h-5 w-5 text-st-failed" />
               <span className="text-3xl font-bold">
                 {alerts?.filter((a) => a.status === "failed").length ?? 0}
               </span>
@@ -135,7 +135,7 @@ export default function HistoryPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              <AlertTriangle className="h-5 w-5 text-st-cancelled" />
               <span className="text-3xl font-bold">
                 {alerts?.filter((a) => a.status === "cancelled").length ?? 0}
               </span>

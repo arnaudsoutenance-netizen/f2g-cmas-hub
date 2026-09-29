@@ -96,7 +96,7 @@ export function AlertTimeline({ events, currentStatus, className }: AlertTimelin
                     <span className="text-[11px] font-mono text-ink-3">
                       {typeof event.timestamp === "string"
                         ? event.timestamp
-                        : event.timestamp.toLocaleString("fr-FR", {
+                        : event.timestamp.toLocaleString("en-US", {
                             dateStyle: "short",
                             timeStyle: "short",
                           })}
@@ -128,8 +128,8 @@ export function buildAlertTimeline(alert: {
     {
       status: "DRAFT",
       timestamp: alert.created_at,
-      label: "Brouillon créé",
-      description: "Alerte en cours de rédaction",
+      label: "Draft created",
+      description: "Alert being drafted",
     },
   ];
 
@@ -137,8 +137,8 @@ export function buildAlertTimeline(alert: {
     events.push({
       status: "SCHEDULED",
       timestamp: alert.scheduled_at ?? null,
-      label: "Programmée",
-      description: "Envoi automatique prévu",
+      label: "Scheduled",
+      description: "Automatic send planned",
     });
   }
 
@@ -146,8 +146,8 @@ export function buildAlertTimeline(alert: {
     events.push({
       status: "SENDING",
       timestamp: null,
-      label: "Envoi en cours",
-      description: "Diffusion vers les cellules",
+      label: "Sending",
+      description: "Broadcasting to cells",
     });
   }
 
@@ -155,8 +155,8 @@ export function buildAlertTimeline(alert: {
     events.push({
       status: "SENT",
       timestamp: alert.sent_at ?? null,
-      label: "Envoyée",
-      description: "Diffusion réussie",
+      label: "Sent",
+      description: "Broadcast succeeded",
     });
   }
 
@@ -164,8 +164,8 @@ export function buildAlertTimeline(alert: {
     events.push({
       status: "FAILED",
       timestamp: null,
-      label: "Échec",
-      description: "La diffusion a échoué",
+      label: "Failed",
+      description: "Broadcast failed",
     });
   }
 
@@ -173,8 +173,8 @@ export function buildAlertTimeline(alert: {
     events.push({
       status: "CANCELLED",
       timestamp: null,
-      label: "Annulée",
-      description: "Alerte annulée par l'opérateur",
+      label: "Cancelled",
+      description: "Alert cancelled by the operator",
     });
   }
 

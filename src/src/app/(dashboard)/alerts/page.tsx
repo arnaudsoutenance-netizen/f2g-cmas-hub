@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { format, formatDistanceToNow } from "date-fns";
-import { fr } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import { m } from "framer-motion";
 import {
   Plus,
@@ -61,8 +62,24 @@ const STATUS_TABS: { value: AlertStatus | "all"; label: string }[] = [
   { value: "FAILED", label: "Failed" },
 ];
 
+const STATUSES: readonly AlertStatus[] = ["DRAFT", "SCHEDULED", "SENDING", "SENT", "FAILED", "CANCELLED"];
+
+/** `?status=FAILED` preselects the filter (links from the dashboard tiles). */
+function initialStatus(param: string | null): AlertStatus | "all" {
+  return STATUSES.find((s) => s === param) ?? "all";
+}
+
 export default function AlertsPage() {
-  const [statusFilter, setStatusFilter] = useState<AlertStatus | "all">("all");
+  return (
+    <Suspense>
+      <AlertsPageContent />
+    </Suspense>
+  );
+}
+
+function AlertsPageContent() {
+  const searchParams = useSearchParams();
+  const [statusFilter, setStatusFilter] = useState<AlertStatus | "all">(() => initialStatus(searchParams.get("status")));
   const [typeFilter, setTypeFilter] = useState<"all" | "CMAS" | "ETWS">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -99,7 +116,7 @@ export default function AlertsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Delete cette alerte ?")) {
+    if (confirm("Delete this alert?")) {
       await deleteAlert.mutateAsync(id);
     }
   };
@@ -175,7 +192,7 @@ export default function AlertsPage() {
       {/* Content */}
       {isError ? (
         <ErrorState
-          title="Impossible de charger les alertes"
+          title="Could not load alerts"
           error={error}
           onRetry={() => void refetch()}
         />
@@ -188,10 +205,10 @@ export default function AlertsPage() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[100px]">Statut</TableHead>
+                <TableHead className="w-[100px]">Status</TableHead>
                 <TableHead className="w-[120px]">Type</TableHead>
                 <TableHead>Message</TableHead>
-                <TableHead className="w-[80px]">Cellules</TableHead>
+                <TableHead className="w-[80px]">Cells</TableHead>
                 <TableHead className="w-[120px]">Date</TableHead>
                 <TableHead className="w-[50px] text-right">Actions</TableHead>
               </TableRow>
@@ -229,7 +246,7 @@ export default function AlertsPage() {
                         <>
                           <p className="text-ink">
                             {format(new Date(alert.sent_at), "dd MMM", {
-                              locale: fr,
+                              locale: enUS,
                             })}
                           </p>
                           <p className="text-ink-3">
@@ -240,7 +257,7 @@ export default function AlertsPage() {
                         <>
                           <p className="text-ink">
                             {format(new Date(alert.scheduled_at), "dd MMM", {
-                              locale: fr,
+                              locale: enUS,
                             })}
                           </p>
                           <p className="text-ink-3">
@@ -251,7 +268,7 @@ export default function AlertsPage() {
                         <p className="text-ink-3">
                           {formatDistanceToNow(new Date(alert.created_at), {
                             addSuffix: true,
-                            locale: fr,
+                            locale: enUS,
                           })}
                         </p>
                       )}

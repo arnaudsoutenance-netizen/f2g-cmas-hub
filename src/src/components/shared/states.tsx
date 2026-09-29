@@ -38,7 +38,7 @@ interface ErrorStateProps {
 /** Errors stay in place so the rest of the console remains usable during incidents. */
 export function ErrorState({ title, error, onRetry, className }: ErrorStateProps) {
   const [open, setOpen] = useState(false);
-  const message = error instanceof Error ? error.message : "Erreur inconnue";
+  const message = error instanceof Error ? error.message : "Unknown error";
   const status = error instanceof ApiError ? error.status : undefined;
 
   return (
@@ -55,7 +55,7 @@ export function ErrorState({ title, error, onRetry, className }: ErrorStateProps
             aria-expanded={open}
           >
             <ChevronRight aria-hidden className={cn("size-3.5 transition-transform", open && "rotate-90")} />
-            Détail technique
+            Technical details
           </button>
           {open && (
             <pre className="mt-2 overflow-x-auto rounded-[var(--radius-sm)] bg-surface-sunken p-3 font-mono text-[12px] text-ink-2">
@@ -66,7 +66,7 @@ export function ErrorState({ title, error, onRetry, className }: ErrorStateProps
         </div>
         {onRetry && (
           <Button variant="outline" size="sm" onClick={onRetry}>
-            <RotateCw aria-hidden className="size-3.5" /> Réessayer
+            <RotateCw aria-hidden className="size-3.5" /> Retry
           </Button>
         )}
       </div>

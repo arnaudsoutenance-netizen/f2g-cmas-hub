@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { F2GMark } from "@/components/brand/f2g-mark";
-import { GlowCard } from "@/components/auth/glow-card";
+import { GlowCard } from "@/components/shared/glow-card";
 import { LoginHero } from "@/components/auth/login-hero";
 import { LOGIN_STATS } from "@/components/auth/login-stats";
 import { LoginForm } from "@/components/auth/login-form";

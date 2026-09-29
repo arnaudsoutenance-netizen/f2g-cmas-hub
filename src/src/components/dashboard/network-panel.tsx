@@ -1,7 +1,7 @@
 "use client";
 
 import { formatDistanceToNowStrict } from "date-fns";
-import { fr } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import Link from "next/link";
 import { ErrorState } from "@/components/shared/states";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,6 +9,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useCells } from "@/hooks/use-network";
 import { cn } from "@/lib/utils";
 import type { CellSite } from "@/types/domain";
+import { cellState } from "@/lib/cmas/cell-state";
 
 const CELL_DOT: Readonly<Record<string, string>> = {
   active: "bg-st-sent",
@@ -18,8 +19,8 @@ const CELL_DOT: Readonly<Record<string, string>> = {
 
 function lastSeen(cell: CellSite): string {
   return cell.last_seen
-    ? formatDistanceToNowStrict(new Date(cell.last_seen), { locale: fr, addSuffix: true })
-    : "jamais vue";
+    ? formatDistanceToNowStrict(new Date(cell.last_seen), { locale: enUS, addSuffix: true })
+    : "never seen";
 }
 
 /** One square per cell: dense, honest, and it replaces three separate "cells" KPIs. */
@@ -37,9 +38,9 @@ export function NetworkPanel() {
     );
   }
 
-  const active = cells.filter((c) => c.status === "active");
-  const offline = cells.filter((c) => c.status === "offline");
-  const maintenance = cells.filter((c) => c.status === "maintenance");
+  const active = cells.filter((c) => cellState(c.status) === "online");
+  const offline = cells.filter((c) => cellState(c.status) === "offline");
+  const maintenance = cells.filter((c) => cellState(c.status) === "maintenance");
 
   return (
     <div>
@@ -48,7 +49,7 @@ export function NetworkPanel() {
         <span className="text-[14px] text-ink-3 tabular-nums">active / {cells.length}</span>
       </p>
       <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-ink-2">
-        <li className="flex items-center gap-1.5"><span aria-hidden className="size-2 rounded-full bg-st-sent" />{active.length} actives</li>
+        <li className="flex items-center gap-1.5"><span aria-hidden className="size-2 rounded-full bg-st-sent" />{active.length} active</li>
         <li className="flex items-center gap-1.5"><span aria-hidden className="size-2 rounded-full bg-st-failed" />{offline.length} offline</li>
         <li className="flex items-center gap-1.5"><span aria-hidden className="size-2 rounded-full ring-[1.5px] ring-inset ring-ink-3" />{maintenance.length} maintenance</li>
       </ul>
@@ -74,7 +75,7 @@ export function NetworkPanel() {
 
       {offline.length > 0 && (
         <div className="mt-5">
-          <p className="text-[11px] font-semibold tracking-[0.08em] text-ink-3 uppercase">Hors ligne</p>
+          <p className="text-[11px] font-semibold tracking-[0.08em] text-ink-3 uppercase">Offline</p>
           <ul className="mt-2 space-y-1.5">
             {offline.slice(0, 5).map((cell) => (
               <li key={cell.id} className="flex items-center justify-between gap-3 text-[13px]">

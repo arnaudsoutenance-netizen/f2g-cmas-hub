@@ -48,17 +48,17 @@ export type PasswordStrengthState = {
 };
 
 export const defaultPasswordRules: readonly PasswordRule[] = [
-  { id: "length", label: "12 caractères minimum", test: (v) => v.length >= 12 },
+  { id: "length", label: "At least 12 characters", test: (v) => v.length >= 12 },
   {
     id: "case",
-    label: "Majuscules et minuscules",
+    label: "Upper and lower case",
     test: (v) => /[a-z]/.test(v) && /[A-Z]/.test(v),
   },
-  { id: "digit", label: "Un chiffre", test: (v) => /\d/.test(v) },
-  { id: "symbol", label: "Un symbole", test: (v) => SYMBOL.test(v) },
+  { id: "digit", label: "A digit", test: (v) => /\d/.test(v) },
+  { id: "symbol", label: "A symbol", test: (v) => SYMBOL.test(v) },
 ];
 
-const defaultLabels = ["Vide", "Faible", "Moyen", "Bon", "Fort"] as const;
+const defaultLabels = ["Empty", "Weak", "Fair", "Good", "Strong"] as const;
 
 export function usePasswordStrength(
   value: string,
@@ -89,11 +89,11 @@ export function usePasswordStrength(
       value.length === 0
         ? ""
         : [
-            `Force du mot de passe : ${label.toLowerCase()}.`,
-            guessable ? "Ce mot de passe est trop commun." : "",
+            `Password strength: ${label.toLowerCase()}.`,
+            guessable ? "This password is too common." : "",
             unmet.length === 0
-              ? "Toutes les exigences sont remplies."
-              : `Manque : ${unmet.map((r) => r.label.toLowerCase()).join(", ")}.`,
+              ? "All requirements are met."
+              : `Missing: ${unmet.map((r) => r.label.toLowerCase()).join(", ")}.`,
           ]
             .filter(Boolean)
             .join(" ");
@@ -129,7 +129,7 @@ export type PasswordStrengthProps = {
   className?: string;
 };
 
-// Adapté au design system CMAS Hub (tokens du DESIGN.md)
+// Adapted to the CMAS Hub design system (DESIGN.md tokens)
 const TONES = {
   none: {
     bar: "bg-hairline dark:bg-hairline",
@@ -180,7 +180,7 @@ export function PasswordStrength({
     <div className={`w-full ${className}`}>
       <div
         role="meter"
-        aria-label="Force du mot de passe"
+        aria-label="Password strength"
         aria-valuemin={0}
         aria-valuemax={max}
         aria-valuenow={score}
@@ -230,7 +230,7 @@ export function PasswordStrength({
           animate={{ opacity: guessable ? 1 : 0 }}
           transition={reduced ? INSTANT : CROSSFADE}
         >
-          Mot de passe trop commun
+          Password too common
         </m.span>
       </div>
 
@@ -275,7 +275,7 @@ export function PasswordStrength({
               >
                 {rule.label}
               </span>
-              <span className="sr-only">{rule.met ? "rempli" : "non rempli"}</span>
+              <span className="sr-only">{rule.met ? "met" : "not met"}</span>
             </li>
           ))}
         </ul>

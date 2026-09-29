@@ -25,7 +25,7 @@ const mono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: { default: "CMAS Hub · F2G", template: "%s · CMAS Hub" },
-  description: "Console de diffusion d'alertes d'urgence Cell Broadcast (CMAS/ETWS) pour le Cameroun.",
+  description: "Cell Broadcast emergency alert console (CMAS/ETWS) for Cameroon.",
   robots: { index: false, follow: false },
   icons: {
     icon: "/favicon.ico",
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
-      lang="fr"
+      lang="en"
       suppressHydrationWarning
       className={`${display.variable} ${sans.variable} ${mono.variable}`}
     >
