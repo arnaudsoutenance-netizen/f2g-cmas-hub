@@ -82,7 +82,7 @@ class AlertLog(Base):
     action = Column(String(50), nullable=False)  # CREATED, SCHEDULED, SENDING, SENT, FAILED, CANCELLED
     status = Column(String(20), nullable=False)  # success, error, info
     message = Column(Text, nullable=True)
-    metadata = Column(JSON, nullable=True)
+    extra_data = Column(JSON, nullable=True)  # Renamed from 'metadata' (reserved by SQLAlchemy)
     timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     
     # Relationships
