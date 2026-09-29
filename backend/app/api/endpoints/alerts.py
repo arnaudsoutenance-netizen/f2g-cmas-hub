@@ -9,7 +9,7 @@ from typing import Optional
 from datetime import datetime, timezone, timedelta
 
 from app.core.database import get_db
-from app.core.security import get_current_user
+from app.core.security import get_current_user, get_current_sender
 from app.models import User, Alert, AlertCell, AlertLog, CellSite, AlertStatus
 from app.schemas import (
     AlertCreate,
@@ -289,7 +289,7 @@ async def send_alert(
     alert_id: str,
     send_request: AlertSendRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_sender),
 ):
     """Send an alert immediately or schedule it."""
     result = await db.execute(
@@ -371,7 +371,7 @@ async def send_alert(
 async def cancel_alert(
     alert_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_sender),
 ):
     """Cancel a scheduled alert."""
     result = await db.execute(

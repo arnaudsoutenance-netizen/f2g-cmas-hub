@@ -98,6 +98,19 @@ async def get_current_user(
     raise credentials_exception
 
 
+async def get_current_sender(current_user = Depends(get_current_user)):
+    """Get the current user and verify they may send or cancel alerts (not VIEWER).
+
+    Sending SSHes into the eNodeBs: it is a real radio broadcast.
+    """
+    if current_user.role.value not in ("ADMIN", "OPERATOR"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Operator or admin privileges required to send alerts"
+        )
+    return current_user
+
+
 async def get_current_admin(current_user = Depends(get_current_user)):
     """Get the current user and verify they are an admin."""
     if current_user.role.value != "ADMIN":

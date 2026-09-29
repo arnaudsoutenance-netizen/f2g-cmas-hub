@@ -47,6 +47,11 @@ class Settings(BaseSettings):
         "http://localhost:5173",
         "http://127.0.0.1:3000",
     ]
+    # Deployed frontends (production + Vercel previews of the f2g-cmas-hub project)
+    CORS_ORIGIN_REGEX: Optional[str] = (
+        r"https://f2g-cmas-hub\.vercel\.app"
+        r"|https://f2g-cmas-[a-z0-9]+-rush-limitlesslokagst\.vercel\.app"
+    )
 
 
 @lru_cache()
