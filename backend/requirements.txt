@@ -1,31 +1,29 @@
 # F2G CMAS Hub - Backend Dependencies for Render
+# Using compatible versions with prebuilt wheels
 
 # Web framework
-fastapi==0.115.0
-uvicorn[standard]==0.30.6
+fastapi>=0.109.0,<0.116.0
+uvicorn[standard]>=0.27.0
 
 # Database
-sqlalchemy==2.0.35
-aiosqlite==0.20.0
-greenlet==3.1.1
+sqlalchemy>=2.0.25
+aiosqlite>=0.19.0
+greenlet>=3.0.0
 
 # Authentication
-python-jose[cryptography]==3.3.0
-bcrypt==4.2.0
-email-validator==2.2.0
+python-jose[cryptography]>=3.3.0
+bcrypt>=4.1.0
+email-validator>=2.1.0
 
 # SSH for eNB control
-paramiko==3.5.0
+paramiko>=3.4.0
 
-# Validation & Settings
-pydantic==2.9.2
-pydantic-settings==2.5.2
+# Validation & Settings  
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
 
 # File uploads
-python-multipart==0.0.12
-
-# CORS
-starlette==0.38.6
+python-multipart>=0.0.6
 
 # Gunicorn for production
-gunicorn==23.0.0
+gunicorn>=21.0.0
