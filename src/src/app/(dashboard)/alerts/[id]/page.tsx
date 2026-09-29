@@ -1,265 +1,110 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { useParams, useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  Clock,
-  RadioTower,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  FileText,
-  Send,
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { m, useReducedMotion } from "framer-motion";
+import { ArrowLeft, SearchX } from "lucide-react";
+import { useParams } from "next/navigation";
+import { formatRelative } from "@/components/alerts-page/alert-dates";
+import { CellsPanel, DetailsPanel, LifecyclePanel, MessagePanel } from "@/components/alerts-page/alert-detail-sections";
+import { AlertStatusPill } from "@/components/alerts/alert-status-pill";
+import { SeverityBadge } from "@/components/alerts/severity-badge";
+import { LinkButton } from "@/components/shared/link-button";
+import { EmptyState, ErrorState } from "@/components/shared/states";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
-import { format } from "date-fns";
+import { useAlert } from "@/hooks/use-alerts";
+import { useCells } from "@/hooks/use-network";
+import { ApiError } from "@/lib/api/client";
+import { classifyMessageId } from "@/lib/cmas/alert-classes";
+import { pageEnter } from "@/lib/motion";
 
-interface AlertDetail {
-  id: string;
-  message: string;
-  status: "draft" | "scheduled" | "sending" | "sent" | "failed" | "cancelled";
-  createdAt: string;
-  sentAt?: string;
-  scheduledFor?: string;
-  cells: { id: string; name: string; tac: number }[];
-  alertClass?: {
-    id: number;
-    name: string;
-    category: string;
-  };
-  duration?: number;
-  language?: string;
-}
-
-async function fetchAlert(id: string): Promise<AlertDetail> {
-  const res = await fetch(`/api/alerts/${id}`);
-  if (!res.ok) throw new Error("Failed to fetch alert");
-  return res.json();
-}
-
-const statusConfig = {
-  draft: {
-    icon: FileText,
-    color: "text-st-draft-fg",
-    bg: "bg-st-draft-tint",
-    label: "Draft",
-  },
-  scheduled: {
-    icon: Clock,
-    color: "text-st-scheduled-fg",
-    bg: "bg-st-scheduled-tint",
-    label: "Scheduled",
-  },
-  sending: {
-    icon: Send,
-    color: "text-st-sending-fg",
-    bg: "bg-st-sending-tint",
-    label: "Sending",
-  },
-  sent: {
-    icon: CheckCircle2,
-    color: "text-st-sent-fg",
-    bg: "bg-st-sent-tint",
-    label: "Sent",
-  },
-  failed: {
-    icon: XCircle,
-    color: "text-st-failed-fg",
-    bg: "bg-st-failed-tint",
-    label: "Failed",
-  },
-  cancelled: {
-    icon: AlertTriangle,
-    color: "text-st-cancelled-fg",
-    bg: "bg-st-cancelled-tint",
-    label: "Cancelled",
-  },
-};
-
-export default function AlertDetailPage() {
-  const params = useParams();
-  const router = useRouter();
-  const alertId = params.id as string;
-
-  const { data: alert, isLoading, isError } = useQuery({
-    queryKey: ["alert", alertId],
-    queryFn: () => fetchAlert(alertId),
-    enabled: !!alertId,
-  });
-
-  if (isLoading) {
-    return (
-      <div className="p-6 space-y-6">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-64 rounded-xl" />
-      </div>
-    );
-  }
-
-  if (isError || !alert) {
-    return (
-      <div className="p-6 space-y-6">
-        <Button variant="ghost" onClick={() => router.back()}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
-        </Button>
-        <Card className="border-destructive/50 bg-destructive/5">
-          <CardContent className="p-6 text-center">
-            <XCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
-            <p className="text-destructive font-medium">Alert not found</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const config = statusConfig[alert.status];
-  const StatusIcon = config.icon;
-
+function BackLink() {
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-semibold text-foreground">
-            Alert Details
-          </h1>
-          <p className="text-sm text-muted-foreground">ID: {alert.id}</p>
-        </div>
-        <Badge className={`${config.bg} ${config.color}`}>
-          <StatusIcon className="h-3 w-3 mr-1" />
-          {config.label}
-        </Badge>
+    <LinkButton href="/alerts" variant="ghost" size="sm" className="-ml-2 text-ink-2">
+      <ArrowLeft aria-hidden className="size-3.5" /> All alerts
+    </LinkButton>
+  );
+}
+
+function DetailSkeleton() {
+  return (
+    <div className="space-y-6" aria-busy aria-label="Loading alert">
+      <div className="space-y-3">
+        <Skeleton className="h-7 w-24" />
+        <Skeleton className="h-9 w-64" />
+        <Skeleton className="h-5 w-48" />
       </div>
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Message */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Message
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-lg">{alert.message}</p>
-            </CardContent>
-          </Card>
-
-          {/* Cells */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <RadioTower className="h-4 w-4" />
-                Target Cells ({alert.cells.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {alert.cells.map((cell) => (
-                  <div
-                    key={cell.id}
-                    className="p-3 rounded-lg bg-muted/50 flex items-center gap-3"
-                  >
-                    <RadioTower className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">{cell.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        TAC: {cell.tac}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+      <div className="grid gap-6 lg:grid-cols-12">
+        <div className="space-y-6 lg:col-span-7">
+          <Skeleton className="h-[180px] rounded-[16px]" />
+          <Skeleton className="h-[220px] rounded-[16px]" />
         </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Info Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {alert.alertClass && (
-                <div>
-                  <p className="text-xs text-muted-foreground">Alert Class</p>
-                  <p className="font-medium">{alert.alertClass.name}</p>
-                </div>
-              )}
-              <Separator />
-              <div>
-                <p className="text-xs text-muted-foreground">Created</p>
-                <p className="font-medium">
-                  {format(new Date(alert.createdAt), "PPpp")}
-                </p>
-              </div>
-              {alert.sentAt && (
-                <>
-                  <Separator />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Sent</p>
-                    <p className="font-medium">
-                      {format(new Date(alert.sentAt), "PPpp")}
-                    </p>
-                  </div>
-                </>
-              )}
-              {alert.scheduledFor && (
-                <>
-                  <Separator />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Scheduled for</p>
-                    <p className="font-medium">
-                      {format(new Date(alert.scheduledFor), "PPpp")}
-                    </p>
-                  </div>
-                </>
-              )}
-              {alert.duration && (
-                <>
-                  <Separator />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Duration</p>
-                    <p className="font-medium">{alert.duration} minutes</p>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Actions */}
-          {(alert.status === "draft" || alert.status === "scheduled") && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium">Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {alert.status === "draft" && (
-                  <Button className="w-full" disabled>
-                    <Send className="h-4 w-4 mr-2" />
-                    Send Alert
-                  </Button>
-                )}
-                <Button variant="outline" className="w-full" disabled>
-                  Cancel
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+        <div className="space-y-6 lg:col-span-5">
+          <Skeleton className="h-[360px] rounded-[16px]" />
         </div>
       </div>
     </div>
+  );
+}
+
+/** Read-only view of one alert. Sending and cancelling live in the composer, not here. */
+export default function AlertDetailPage() {
+  const reduce = useReducedMotion();
+  const params = useParams<{ id: string }>();
+  const id = params.id;
+  const { data: alert, isPending, isError, error, refetch } = useAlert(id);
+  const sites = useCells();
+
+  if (isPending) return <DetailSkeleton />;
+
+  if (isError) {
+    const notFound = error instanceof ApiError && (error.status === 404 || error.status === 422);
+    return (
+      <div className="space-y-4">
+        <BackLink />
+        {notFound ? (
+          <EmptyState
+            icon={SearchX}
+            title="Alert not found"
+            description="It may have been deleted, or the link is wrong."
+            action={<LinkButton href="/alerts">Back to alerts</LinkButton>}
+          />
+        ) : (
+          <ErrorState title="Unable to load this alert" error={error} onRetry={() => void refetch()} />
+        )}
+      </div>
+    );
+  }
+
+  const alertClass = classifyMessageId(alert.message_id);
+  const title = alertClass ? alertClass.handsetTitle : `Message ID ${alert.message_id}`;
+
+  return (
+    <m.div {...(reduce ? {} : pageEnter)} className="space-y-6">
+      <header className="space-y-3">
+        <BackLink />
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="min-w-0 space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <SeverityBadge messageId={alert.message_id} />
+              <AlertStatusPill status={alert.status} scheduledAt={alert.scheduled_at} />
+            </div>
+            <h1 className="font-display text-[28px] leading-tight font-bold text-ink">{title}</h1>
+            <p className="text-[14px] text-ink-3">
+              {alert.alert_type} · <span className="font-mono">{alert.id.slice(0, 8)}</span> · created {formatRelative(alert.created_at)}
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <div className="grid gap-6 lg:grid-cols-12">
+        <div className="min-w-0 space-y-6 lg:col-span-7">
+          <MessagePanel alert={alert} />
+          <LifecyclePanel alert={alert} />
+          <CellsPanel alert={alert} sites={sites.data} />
+        </div>
+        <div className="min-w-0 space-y-6 lg:col-span-5">
+          <DetailsPanel alert={alert} />
+        </div>
+      </div>
+    </m.div>
   );
 }

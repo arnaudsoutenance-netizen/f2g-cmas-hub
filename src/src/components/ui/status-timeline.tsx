@@ -167,7 +167,7 @@ export function StatusTimeline({
                 />
                 {/* Pulse ring for active sending */}
                 {isSending && (
-                  <span className="absolute inset-0 animate-ping rounded-full bg-primary/30" />
+                  <span className="absolute inset-0 animate-ping rounded-full motion-reduce:animate-none bg-primary/30" />
                 )}
               </m.div>
 

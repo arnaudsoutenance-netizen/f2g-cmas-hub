@@ -1,190 +1,155 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { History, Clock, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
+import { m, useReducedMotion } from "framer-motion";
+import { Download, FilterX, History, Info } from "lucide-react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import { Panel } from "@/components/dashboard/panel";
+import { HistoryFilters } from "@/components/history-page/history-filters";
+import { HistoryLog, HistoryLogSkeleton } from "@/components/history-page/history-log";
+import { HistoryStats, HistoryStatsSkeleton } from "@/components/history-page/history-stats";
+import {
+  alertsToCsv,
+  filterHistory,
+  groupByDay,
+  type ClassFilter,
+  type StatusFilter,
+} from "@/components/history-page/history-utils";
+import { HISTORY_PAGE_SIZE, useAlertHistory } from "@/components/history-page/use-alert-history";
+import { EmptyState, ErrorState } from "@/components/shared/states";
+import { LinkButton } from "@/components/shared/link-button";
+import { Button } from "@/components/ui/button";
+import { dur, ease } from "@/lib/motion";
+import type { Alert } from "@/types/domain";
 
-interface Alert {
-  id: string;
-  message: string;
-  status: "sent" | "failed" | "cancelled";
-  createdAt: string;
-  sentAt?: string;
-  cellCount: number;
-  alertClass?: string;
+function downloadCsv(rows: readonly Alert[]) {
+  const blob = new Blob([alertsToCsv(rows)], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `cmas-history-${format(new Date(), "yyyyMMdd-HHmm")}.csv`;
+  link.click();
+  // Some browsers start the download asynchronously; release the blob afterwards.
+  window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
+  toast.success(`Exported ${rows.length} alert${rows.length === 1 ? "" : "s"}`);
 }
 
-async function fetchAlertHistory(): Promise<Alert[]> {
-  const res = await fetch("/api/alerts?status=sent,failed,cancelled&limit=50");
-  if (!res.ok) throw new Error("Failed to fetch history");
-  return res.json();
-}
-
-const statusConfig = {
-  sent: {
-    icon: CheckCircle2,
-    color: "text-st-sent-fg",
-    bg: "bg-st-sent-tint",
-    badge: "bg-st-sent-tint text-st-sent-fg hover:bg-st-sent-tint",
-  },
-  failed: {
-    icon: XCircle,
-    color: "text-st-failed-fg",
-    bg: "bg-st-failed-tint",
-    badge: "bg-st-failed-tint text-st-failed-fg hover:bg-st-failed-tint",
-  },
-  cancelled: {
-    icon: AlertTriangle,
-    color: "text-st-cancelled-fg",
-    bg: "bg-st-cancelled-tint",
-    badge: "bg-st-cancelled-tint text-st-cancelled-fg hover:bg-st-cancelled-tint",
-  },
-};
-
+/** Broadcast log: every alert that reached a final state, newest first, grouped by day. */
 export default function HistoryPage() {
-  const { data: alerts, isLoading, isError } = useQuery({
-    queryKey: ["alertHistory"],
-    queryFn: fetchAlertHistory,
-  });
+  const history = useAlertHistory();
+  const reduce = useReducedMotion();
+  const [status, setStatus] = useState<StatusFilter>("all");
+  const [alertClass, setAlertClass] = useState<ClassFilter>("all");
 
-  if (isLoading) {
-    return (
-      <div className="p-6 space-y-6">
-        <h1 className="text-2xl font-semibold text-foreground flex items-center gap-3">
-          <History className="h-6 w-6 text-primary" />
-          Alert History
-        </h1>
-        <div className="space-y-3">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <Skeleton key={i} className="h-20 rounded-xl" />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const visible = useMemo(() => filterHistory(history.alerts, status, alertClass), [history.alerts, status, alertClass]);
+  const groups = useMemo(() => groupByDay(visible), [visible]);
+  const filtered = status !== "all" || alertClass !== "all";
+  const hasAny = history.alerts.length > 0;
+  const ready = !history.isPending && !history.isError;
 
-  if (isError) {
-    return (
-      <div className="p-6 space-y-6">
-        <h1 className="text-2xl font-semibold text-foreground flex items-center gap-3">
-          <History className="h-6 w-6 text-primary" />
-          Alert History
-        </h1>
-        <Card className="border-destructive/50 bg-destructive/5">
-          <CardContent className="p-6 text-center">
-            <XCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
-            <p className="text-destructive font-medium">Unable to load history</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const clearFilters = () => {
+    setStatus("all");
+    setAlertClass("all");
+  };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-foreground flex items-center gap-3">
-          <History className="h-6 w-6 text-primary" />
-          Alert History
-        </h1>
-        <span className="text-sm text-muted-foreground">
-          {alerts?.length ?? 0} alerts
-        </span>
-      </div>
+    <div className="space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="font-display text-[28px] leading-tight font-bold text-ink">History</h1>
+          <p className="mt-0.5 text-[14px] text-ink-3">
+            Broadcast log
+            {ready && history.dataUpdatedAt > 0
+              ? ` · updated ${format(history.dataUpdatedAt, "HH:mm")}`
+              : ""}
+          </p>
+        </div>
+        <Button variant="outline" size="md" disabled={!ready || visible.length === 0} onClick={() => downloadCsv(visible)}>
+          <Download aria-hidden className="size-4" />
+          Export CSV
+        </Button>
+      </header>
 
-      {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Sent
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-st-sent" />
-              <span className="text-3xl font-bold">
-                {alerts?.filter((a) => a.status === "sent").length ?? 0}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Failed
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <XCircle className="h-5 w-5 text-st-failed" />
-              <span className="text-3xl font-bold">
-                {alerts?.filter((a) => a.status === "failed").length ?? 0}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Cancelled
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-st-cancelled" />
-              <span className="text-3xl font-bold">
-                {alerts?.filter((a) => a.status === "cancelled").length ?? 0}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {history.isError ? (
+        <ErrorState title="Unable to load the broadcast log" error={history.error} onRetry={() => void history.refetch()} />
+      ) : history.isPending ? (
+        <div className="space-y-6" aria-busy aria-label="Loading the broadcast log">
+          <HistoryStatsSkeleton />
+          <div className="overflow-hidden rounded-[16px] border border-hairline bg-surface shadow-e1">
+            <HistoryLogSkeleton />
+          </div>
+        </div>
+      ) : !hasAny ? (
+        <>
+          <HistoryStats totals={history.totals} />
+          <Panel title="Broadcast log" description="Sent, failed and cancelled alerts, newest first">
+            <EmptyState
+              icon={History}
+              title="Nothing broadcast yet"
+              description="Alerts appear here once they have been sent, have failed or were cancelled."
+              action={<LinkButton href="/alerts/new">Compose an alert</LinkButton>}
+              className="px-5"
+            />
+          </Panel>
+        </>
+      ) : (
+        <>
+          <HistoryStats totals={history.totals} />
 
-      {/* Alert List */}
-      <Card>
-        <CardContent className="p-0 divide-y">
-          {alerts && alerts.length > 0 ? (
-            alerts.map((alert) => {
-              const config = statusConfig[alert.status];
-              const StatusIcon = config.icon;
-              return (
-                <div
-                  key={alert.id}
-                  className="p-4 flex items-start gap-4 hover:bg-muted/50 transition-colors"
-                >
-                  <div className={`p-2 rounded-lg ${config.bg}`}>
-                    <StatusIcon className={`h-4 w-4 ${config.color}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {alert.message}
-                    </p>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {formatDistanceToNow(new Date(alert.createdAt), {
-                          addSuffix: true,
-                        })}
-                      </span>
-                      <span>{alert.cellCount} cells</span>
-                    </div>
-                  </div>
-                  <Badge className={config.badge}>{alert.status}</Badge>
-                </div>
-              );
-            })
-          ) : (
-            <div className="p-8 text-center text-muted-foreground">
-              <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No alerts in history yet</p>
+          <Panel
+            title="Broadcast log"
+            description={
+              filtered
+                ? `${visible.length} of ${history.alerts.length} alerts match the filters`
+                : `${history.alerts.length} alert${history.alerts.length === 1 ? "" : "s"}, newest first`
+            }
+          >
+            <div className="flex flex-col gap-3 border-b border-hairline px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+              <HistoryFilters status={status} alertClass={alertClass} onStatusChange={setStatus} onClassChange={setAlertClass} />
+              {filtered ? (
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="self-start sm:self-auto">
+                  <FilterX aria-hidden />
+                  Clear filters
+                </Button>
+              ) : null}
             </div>
-          )}
-        </CardContent>
-      </Card>
+
+            <p className="sr-only" aria-live="polite">
+              {visible.length} alert{visible.length === 1 ? "" : "s"} shown
+            </p>
+
+            {history.truncated ? (
+              <p className="flex items-start gap-2 border-b border-hairline bg-surface-sunken px-4 py-2.5 text-[12px] text-ink-2 sm:px-5">
+                <Info aria-hidden className="mt-px size-3.5 shrink-0" />
+                Showing the latest {HISTORY_PAGE_SIZE} alerts per outcome; counters above cover the full log.
+              </p>
+            ) : null}
+
+            <m.div
+              initial={reduce ? false : { opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: dur.moderate, ease: ease.standard }}
+            >
+              {visible.length === 0 ? (
+                <EmptyState
+                  icon={FilterX}
+                  title="No alert matches these filters"
+                  description="Try another outcome or class, or clear the filters to see the whole log."
+                  action={
+                    <Button variant="outline" onClick={clearFilters}>
+                      Clear filters
+                    </Button>
+                  }
+                  className="px-5"
+                />
+              ) : (
+                <HistoryLog groups={groups} />
+              )}
+            </m.div>
+          </Panel>
+        </>
+      )}
     </div>
   );
 }

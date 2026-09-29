@@ -1,73 +1,26 @@
 "use client";
 
+import { m, useReducedMotion } from "framer-motion";
+import { Inbox, Plus, SearchX } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import Link from "next/link";
-import { format, formatDistanceToNow } from "date-fns";
-import { enUS } from "date-fns/locale";
-import { m } from "framer-motion";
-import {
-  Plus,
-  Search,
-  Filter,
-  MoreVertical,
-  Eye,
-  Edit,
-  Trash2,
-  Copy,
-  XCircle,
-  Activity,
-} from "lucide-react";
-
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
-import { SeverityBadge } from "@/components/alerts/severity-badge";
-import { AlertStatusPill } from "@/components/alerts/alert-status-pill";
+import { Panel } from "@/components/dashboard/panel";
+import { parsePage, parseStatus, parseType } from "@/components/alerts-page/alert-dates";
+import { AlertsFilterBar } from "@/components/alerts-page/alerts-filter-bar";
+import { AlertsList, AlertsListSkeleton, AlertsPagination } from "@/components/alerts-page/alerts-list";
+import { DeleteDraftDialog } from "@/components/alerts-page/delete-draft-dialog";
+import { StatusCounters } from "@/components/alerts-page/status-counters";
+import { statusLabel } from "@/components/alerts/alert-status-pill";
 import { LinkButton } from "@/components/shared/link-button";
-import { ErrorState } from "@/components/shared/states";
-import { useAlerts, useDeleteAlert } from "@/hooks/use-alerts";
+import { EmptyState, ErrorState } from "@/components/shared/states";
+import { Button } from "@/components/ui/button";
+import { useAlerts } from "@/hooks/use-alerts";
+import { useStats } from "@/hooks/use-network";
 import { pageEnter } from "@/lib/motion";
-import type { AlertStatus } from "@/types/domain";
+import { cn } from "@/lib/utils";
+import type { Alert, AlertListFilters, AlertStatus, AlertType } from "@/types/domain";
 
-const STATUS_TABS: { value: AlertStatus | "all"; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "DRAFT", label: "Drafts" },
-  { value: "SCHEDULED", label: "Scheduled" },
-  { value: "SENDING", label: "Sending" },
-  { value: "SENT", label: "Sent" },
-  { value: "FAILED", label: "Failed" },
-];
-
-const STATUSES: readonly AlertStatus[] = ["DRAFT", "SCHEDULED", "SENDING", "SENT", "FAILED", "CANCELLED"];
-
-/** `?status=FAILED` preselects the filter (links from the dashboard tiles). */
-function initialStatus(param: string | null): AlertStatus | "all" {
-  return STATUSES.find((s) => s === param) ?? "all";
-}
+const PAGE_SIZE = 20;
 
 export default function AlertsPage() {
   return (
@@ -77,309 +30,150 @@ export default function AlertsPage() {
   );
 }
 
+/** Filters live in the URL (`?status=FAILED&type=CMAS&page=2`), so dashboard tiles can deep-link. */
+function useUrlFilters() {
+  const params = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const status = parseStatus(params.get("status"));
+  const type = parseType(params.get("type"));
+  const page = parsePage(params.get("page"));
+
+  const hrefWith = (next: { status?: AlertStatus; type?: AlertType; page?: number }) => {
+    const q = new URLSearchParams();
+    if (next.status) q.set("status", next.status);
+    if (next.type) q.set("type", next.type);
+    if (next.page && next.page > 1) q.set("page", String(next.page));
+    const s = q.toString();
+    return s ? `${pathname}?${s}` : pathname;
+  };
+  const go = (next: { status?: AlertStatus; type?: AlertType; page?: number }) =>
+    router.replace(hrefWith(next), { scroll: false });
+
+  return { status, type, page, hrefWith, go };
+}
+
 function AlertsPageContent() {
-  const searchParams = useSearchParams();
-  const [statusFilter, setStatusFilter] = useState<AlertStatus | "all">(() => initialStatus(searchParams.get("status")));
-  const [typeFilter, setTypeFilter] = useState<"all" | "CMAS" | "ETWS">("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const reduce = useReducedMotion();
+  const { status, type, page, hrefWith, go } = useUrlFilters();
+  const [search, setSearch] = useState("");
+  const [toDelete, setToDelete] = useState<Alert | null>(null);
 
-  // Build filters for API
-  const filters = {
-    limit: 50,
-    ...(statusFilter !== "all" && { status: statusFilter }),
-    ...(typeFilter !== "all" && { alert_type: typeFilter }),
-    ...(searchQuery && { search: searchQuery }),
+  const filters: AlertListFilters = {
+    page,
+    limit: PAGE_SIZE,
+    ...(status ? { status } : {}),
+    ...(type ? { alert_type: type } : {}),
   };
+  const alerts = useAlerts(filters);
+  const stats = useStats();
 
-  const {
-    data: alertsData,
-    isPending,
-    isError,
-    error,
-    refetch,
-  } = useAlerts(filters);
+  // The API has no text search: filter the page that is loaded, and say so.
+  const query = search.trim().toLowerCase();
+  const rows = (alerts.data?.data ?? []).filter(
+    (a) =>
+      !query ||
+      a.content.toLowerCase().includes(query) ||
+      a.id.toLowerCase().startsWith(query) ||
+      String(a.message_id).includes(query),
+  );
+  const serverEmpty = alerts.data?.data.length === 0;
+  const hasFilters = status !== undefined || type !== undefined;
 
-  const deleteAlert = useDeleteAlert();
-
-  const alerts = alertsData?.data ?? [];
-  const total = alertsData?.pagination?.total ?? alerts.length;
-
-  // Count by status (from current data)
-  const statusCounts: Record<string, number> = {
-    all: total,
-    DRAFT: alerts.filter((a) => a.status === "DRAFT").length,
-    SCHEDULED: alerts.filter((a) => a.status === "SCHEDULED").length,
-    SENDING: alerts.filter((a) => a.status === "SENDING").length,
-    SENT: alerts.filter((a) => a.status === "SENT").length,
-    FAILED: alerts.filter((a) => a.status === "FAILED").length,
-    CANCELLED: alerts.filter((a) => a.status === "CANCELLED").length,
-  };
-
-  const handleDelete = async (id: string) => {
-    if (confirm("Delete this alert?")) {
-      await deleteAlert.mutateAsync(id);
-    }
-  };
+  const description = [
+    status ? statusLabel(status) : "All statuses",
+    type ?? "CMAS & ETWS",
+    alerts.data ? `${alerts.data.pagination.total} alert${alerts.data.pagination.total === 1 ? "" : "s"}` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
-    <m.div {...pageEnter} className="space-y-5">
-      {/* Header */}
-      <header className="flex flex-wrap items-center justify-between gap-3">
+    <m.div {...(reduce ? {} : pageEnter)} className="space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-[22px] font-semibold text-ink">
-            Alerts
-          </h1>
-          <p className="text-[12px] text-ink-3">
-            Manage and track your Cell Broadcast alerts
-          </p>
+          <h1 className="font-display text-[28px] leading-tight font-bold text-ink">Alerts</h1>
+          <p className="mt-0.5 text-[14px] text-ink-3">Every Cell Broadcast alert, from draft to delivery</p>
         </div>
-        <LinkButton size="sm" href="/alerts/new">
-          <Plus className="size-3.5" /> New Alert
+        <LinkButton href="/alerts/new" className="h-9 px-3.5">
+          <Plus aria-hidden className="size-4" /> New alert
         </LinkButton>
       </header>
 
-      {/* Filters Row */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        {/* Search */}
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-ink-3" />
-          <Input
-            placeholder="Search by content or ID..."
-            className="h-8 pl-8 text-[13px]"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+      {stats.isError ? null : (
+        <StatusCounters
+          stats={stats.data?.alerts}
+          pending={stats.isPending}
+          active={status}
+          hrefFor={(s) => hrefWith({ status: s, type })}
+        />
+      )}
+
+      <Panel title="Alert list" description={description}>
+        <div className="border-b border-hairline px-5 py-3">
+          <AlertsFilterBar
+            status={status}
+            type={type}
+            search={search}
+            onStatusChange={(s) => go({ status: s, type })}
+            onTypeChange={(t) => go({ status, type: t })}
+            onSearchChange={setSearch}
+            onClear={() => {
+              setSearch("");
+              go({});
+            }}
           />
         </div>
 
-        {/* Type Filter */}
-        <Select
-          value={typeFilter}
-          onValueChange={(v) => setTypeFilter(v as typeof typeFilter)}
-        >
-          <SelectTrigger className="h-8 w-[140px] text-[13px]">
-            <Filter className="mr-1.5 size-3.5" />
-            <SelectValue placeholder="Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All types</SelectItem>
-            <SelectItem value="CMAS">CMAS</SelectItem>
-            <SelectItem value="ETWS">ETWS</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Status Tabs */}
-      <Tabs
-        value={statusFilter}
-        onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}
-      >
-        <TabsList className="h-8 w-full max-w-2xl">
-          {STATUS_TABS.map((tab) => (
-            <TabsTrigger
-              key={tab.value}
-              value={tab.value}
-              className="gap-1.5 text-[12px]"
-            >
-              {tab.label}
-              <span className="rounded bg-surface-sunken px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-ink-3">
-                {statusCounts[tab.value] ?? 0}
-              </span>
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
-
-      {/* Content */}
-      {isError ? (
-        <ErrorState
-          title="Could not load alerts"
-          error={error}
-          onRetry={() => void refetch()}
-        />
-      ) : isPending ? (
-        <AlertsTableSkeleton />
-      ) : alerts.length === 0 ? (
-        <EmptyState searchQuery={searchQuery} statusFilter={statusFilter} />
-      ) : (
-        <div className="rounded-xl border border-hairline bg-shell">
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[100px]">Status</TableHead>
-                <TableHead className="w-[120px]">Type</TableHead>
-                <TableHead>Message</TableHead>
-                <TableHead className="w-[80px]">Cells</TableHead>
-                <TableHead className="w-[120px]">Date</TableHead>
-                <TableHead className="w-[50px] text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {alerts.map((alert) => (
-                <TableRow key={alert.id} className="group">
-                  <TableCell>
-                    <AlertStatusPill status={alert.status} size="sm" />
-                  </TableCell>
-                  <TableCell>
-                    <SeverityBadge messageId={alert.message_id} />
-                  </TableCell>
-                  <TableCell>
-                    <Link
-                      href={`/alerts/${alert.id}`}
-                      className="block hover:underline"
-                    >
-                      <p className="line-clamp-1 text-[13px] font-medium text-ink">
-                        {alert.content || "No content"}
-                      </p>
-                      <p className="text-[11px] font-mono text-ink-3">
-                        {alert.id.slice(0, 8)}
-                      </p>
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-[13px] tabular-nums text-ink-2">
-                      {alert.cells?.length ?? 0}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-[12px]">
-                      {alert.sent_at ? (
-                        <>
-                          <p className="text-ink">
-                            {format(new Date(alert.sent_at), "dd MMM", {
-                              locale: enUS,
-                            })}
-                          </p>
-                          <p className="text-ink-3">
-                            {format(new Date(alert.sent_at), "HH:mm")}
-                          </p>
-                        </>
-                      ) : alert.scheduled_at ? (
-                        <>
-                          <p className="text-ink">
-                            {format(new Date(alert.scheduled_at), "dd MMM", {
-                              locale: enUS,
-                            })}
-                          </p>
-                          <p className="text-ink-3">
-                            {format(new Date(alert.scheduled_at), "HH:mm")}
-                          </p>
-                        </>
-                      ) : (
-                        <p className="text-ink-3">
-                          {formatDistanceToNow(new Date(alert.created_at), {
-                            addSuffix: true,
-                            locale: enUS,
-                          })}
-                        </p>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger>
-                        <Button
-                          variant="ghost"
-                          size="icon-xs"
-                          className="opacity-0 group-hover:opacity-100"
-                        >
-                          <MoreVertical className="size-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Link href={`/alerts/${alert.id}`} className="flex items-center">
-                            <Eye className="mr-2 size-4" />
-                            View details
-                          </Link>
-                        </DropdownMenuItem>
-                        {(alert.status === "DRAFT" ||
-                          alert.status === "SCHEDULED") && (
-                          <DropdownMenuItem>
-                            <Link href={`/alerts/${alert.id}/edit`} className="flex items-center">
-                              <Edit className="mr-2 size-4" />
-                              Edit
-                            </Link>
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem>
-                          <Copy className="mr-2 size-4" />
-                          Duplicate
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        {alert.status === "SCHEDULED" && (
-                          <DropdownMenuItem className="text-danger">
-                            <XCircle className="mr-2 size-4" />
-                            Cancel
-                          </DropdownMenuItem>
-                        )}
-                        {alert.status === "DRAFT" && (
-                          <DropdownMenuItem
-                            className="text-danger"
-                            onClick={() => handleDelete(alert.id)}
-                          >
-                            <Trash2 className="mr-2 size-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-    </m.div>
-  );
-}
-
-function AlertsTableSkeleton() {
-  return (
-    <div className="rounded-xl border border-hairline bg-shell">
-      <div className="divide-y divide-hairline">
-        {[0, 1, 2, 3, 4].map((i) => (
-          <div key={i} className="flex items-center gap-4 px-4 py-3">
-            <Skeleton className="h-5 w-20 rounded-full" />
-            <Skeleton className="h-5 w-24" />
-            <div className="flex-1 space-y-1.5">
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-3 w-20" />
-            </div>
-            <Skeleton className="h-4 w-8" />
-            <Skeleton className="h-4 w-16" />
+        {alerts.isError ? (
+          <div className="p-5">
+            <ErrorState title="Unable to load alerts" error={alerts.error} onRetry={() => void alerts.refetch()} />
           </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+        ) : alerts.isPending ? (
+          <AlertsListSkeleton />
+        ) : serverEmpty && !hasFilters ? (
+          <EmptyState
+            icon={Inbox}
+            title="No alerts yet"
+            description="Alerts you compose and broadcast will be listed here."
+            action={<LinkButton href="/alerts/new">Compose the first alert</LinkButton>}
+            className="px-5"
+          />
+        ) : rows.length === 0 ? (
+          <EmptyState
+            icon={SearchX}
+            title="No alert matches these filters"
+            description={query ? "The search only covers the alerts on this page." : "Try another status or type."}
+            action={
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearch("");
+                  go({});
+                }}
+              >
+                Clear filters
+              </Button>
+            }
+            className="px-5"
+          />
+        ) : (
+          <div aria-busy={alerts.isPlaceholderData} className={cn("transition-opacity", alerts.isPlaceholderData && "opacity-60")}>
+            <AlertsList alerts={rows} onDelete={setToDelete} />
+          </div>
+        )}
 
-function EmptyState({
-  searchQuery,
-  statusFilter,
-}: {
-  searchQuery: string;
-  statusFilter: string;
-}) {
-  return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-hairline bg-shell py-16 text-center">
-      <Activity className="size-10 text-ink-3/50" />
-      <h3 className="mt-3 text-[15px] font-medium text-ink">
-        No alerts found
-      </h3>
-      <p className="mt-1 text-[13px] text-ink-3">
-        {searchQuery
-          ? "Try adjusting your search criteria"
-          : statusFilter !== "all"
-            ? `No alerts with status "${statusFilter}"`
-            : "Create your first alert to get started"}
-      </p>
-      {!searchQuery && statusFilter === "all" && (
-        <LinkButton size="sm" href="/alerts/new" className="mt-4">
-          <Plus className="size-3.5" /> Create Alert
-        </LinkButton>
-      )}
-    </div>
+        {alerts.data && !alerts.isError && alerts.data.pagination.total > 0 ? (
+          <AlertsPagination
+            pagination={alerts.data.pagination}
+            shown={alerts.data.data.length}
+            onPage={(p) => go({ status, type, page: p })}
+          />
+        ) : null}
+      </Panel>
+
+      <DeleteDraftDialog alert={toDelete} onClose={() => setToDelete(null)} />
+    </m.div>
   );
 }
