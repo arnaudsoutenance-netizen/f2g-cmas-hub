@@ -136,6 +136,6 @@
   @keyframes caret-blink { 50% { opacity: 0; } }
   @media (prefers-reduced-motion: reduce) {
     .status-pulse::after { animation: none; transform: none; opacity: 1; background: transparent; box-shadow: 0 0 0 2px currentColor; }
-    .animate-spin, .animate-pulse { animation: none; }
+    .animate-spin, .animate-pulse, .animate-caret { animation: none; }
   }
 }

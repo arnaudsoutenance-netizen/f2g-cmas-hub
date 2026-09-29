@@ -14,11 +14,11 @@ function safeNext(next: string | null): string {
 
 function errorMessage(error: unknown): string {
   if (error instanceof ApiError) {
-    if (error.status === 401 || error.status === 400) return "Email ou mot de passe incorrect.";
+    if (error.status === 401 || error.status === 400) return "Incorrect email or password.";
     if (error.status === 0) return error.message;
-    if (error.status === 429) return "Trop de tentatives. Réessayez dans quelques minutes.";
+    if (error.status === 429) return "Too many attempts. Try again in a few minutes.";
   }
-  return "Connexion impossible. Réessayez.";
+  return "Unable to sign in. Please try again.";
 }
 
 const inputClass =
@@ -64,7 +64,7 @@ export function LoginForm() {
 
       <div className="space-y-1.5">
         <label htmlFor={ids.password} className="text-[12px] font-medium text-ink-2">
-          Mot de passe
+          Password
         </label>
         <div className="relative">
           <input
@@ -81,7 +81,7 @@ export function LoginForm() {
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
-            aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+            aria-label={showPassword ? "Hide password" : "Show password"}
             className="absolute inset-y-0 right-0 grid w-11 place-items-center text-ink-3 hover:text-ink"
           >
             {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -96,9 +96,9 @@ export function LoginForm() {
         </p>
       )}
 
-      <Button type="submit" size="lg" className="w-full" disabled={signIn.isPending || !email || !password}>
+      <Button type="submit" size="lg" className="w-full disabled:opacity-100 disabled:bg-surface-raised disabled:text-ink-3" disabled={signIn.isPending || !email || !password}>
         {signIn.isPending && <LoaderCircle aria-hidden className="size-4 animate-spin" />}
-        {signIn.isPending ? "Connexion…" : "Se connecter"}
+        {signIn.isPending ? "Signing in…" : "Sign in"}
       </Button>
     </form>
   );
