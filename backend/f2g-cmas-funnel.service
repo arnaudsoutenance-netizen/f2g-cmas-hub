@@ -1,0 +1,17 @@
+[Unit]
+Description=Tailscale Funnel for F2G CMAS Hub
+Documentation=https://tailscale.com/kb/1223/funnel
+After=tailscaled.service f2g-cmas-hub.service
+Requires=tailscaled.service
+Wants=f2g-cmas-hub.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# Reset funnel config first, then set up fresh
+ExecStartPre=/bin/bash -c '/usr/bin/tailscale funnel --https=443 off 2>/dev/null || true'
+ExecStart=/usr/bin/tailscale funnel 8000
+ExecStop=/usr/bin/tailscale funnel --https=443 off
+
+[Install]
+WantedBy=multi-user.target

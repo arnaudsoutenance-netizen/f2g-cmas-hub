@@ -1,0 +1,35 @@
+[Unit]
+Description=F2G CMAS Hub Backend API
+Documentation=https://github.com/rush-limitless/f2g-cmas-hub
+After=network-online.target tailscaled.service
+Wants=network-online.target
+Requires=tailscaled.service
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=simple
+User=f2g
+Group=f2g
+WorkingDirectory=/home/f2g/F2G_CMAS_HUB/backend
+Environment="PATH=/home/f2g/F2G_CMAS_HUB/backend/venv/bin:/usr/local/bin:/usr/bin"
+Environment="DATABASE_URL=sqlite+aiosqlite:///./cmas_hub.db"
+EnvironmentFile=/home/f2g/.config/f2g-cmas-hub/env
+
+ExecStart=/home/f2g/F2G_CMAS_HUB/backend/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+
+# Restart policy
+Restart=always
+RestartSec=5
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=f2g-cmas-hub
+
+[Install]
+WantedBy=multi-user.target
