@@ -111,15 +111,13 @@ export function usePasswordStrength(
   const [settled, setSettled] = useState("");
 
   useEffect(() => {
-    if (state.announcement === "") {
-      setSettled("");
-      return;
-    }
+    if (state.announcement === "") return;
     const id = setTimeout(() => setSettled(state.announcement), announceDelay);
     return () => clearTimeout(id);
   }, [state.announcement, announceDelay]);
 
-  return { ...state, announcement: settled };
+  // An empty field clears the live region immediately; no effect needed for that.
+  return { ...state, announcement: state.announcement === "" ? "" : settled };
 }
 
 export type PasswordStrengthProps = {

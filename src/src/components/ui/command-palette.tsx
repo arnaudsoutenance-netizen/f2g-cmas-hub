@@ -122,7 +122,7 @@ export function CommandPalette() {
                 ))}
                 {filtered.length === 0 && (
                   <p className="text-center text-[13px] text-ink-3 py-6">
-                    No results for "{query}"
+                    No results for &ldquo;{query}&rdquo;
                   </p>
                 )}
               </div>
