@@ -64,20 +64,44 @@ export function NetworkStatusPanel({ cells, pending }: { cells: readonly CellSit
                     return (
                       <li
                         key={cell.id}
-                        className="flex items-center justify-between gap-2 rounded-lg border border-hairline bg-surface-sunken px-3 py-2"
+                        className="rounded-lg border border-hairline bg-surface-sunken px-3 py-2.5"
                       >
-                        <div className="flex items-center gap-2">
-                          <Icon aria-hidden className={cn("size-4", className)} />
-                          <div>
-                            <p className="font-mono text-[13px] font-medium text-ink">{cell.cell_id}</p>
-                            <p className="text-[11px] text-ink-3">{cell.name}</p>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <Icon aria-hidden className={cn("size-4", className)} />
+                            <div>
+                              <p className="font-mono text-[13px] font-medium text-ink">{cell.cell_id}</p>
+                              <p className="text-[11px] text-ink-3">{cell.name}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            {state !== "online" && (
+                              <p className={cn("text-[11px] font-medium", className)}>{CELL_STATE_LABEL[state]}</p>
+                            )}
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-mono text-[12px] text-ink-2">TAC {cell.tac}</p>
-                          {state !== "online" && (
-                            <p className={cn("text-[11px] font-medium", className)}>{CELL_STATE_LABEL[state]}</p>
+                        {/* Technical details row */}
+                        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 border-t border-hairline pt-2">
+                          <span className="inline-flex items-center gap-1 text-[11px]">
+                            <span className="text-ink-3">TAC</span>
+                            <span className="font-mono text-ink-2">{cell.tac}</span>
+                          </span>
+                          {cell.pci !== undefined && cell.pci !== null && (
+                            <span className="inline-flex items-center gap-1 text-[11px]">
+                              <span className="text-ink-3">PCI</span>
+                              <span className="font-mono text-ink-2">{cell.pci}</span>
+                            </span>
                           )}
+                          {cell.earfcn !== undefined && cell.earfcn !== null && (
+                            <span className="inline-flex items-center gap-1 text-[11px]">
+                              <span className="text-ink-3">EARFCN</span>
+                              <span className="font-mono text-ink-2">{cell.earfcn}</span>
+                            </span>
+                          )}
+                          <span className="inline-flex items-center gap-1 text-[11px]">
+                            <span className="text-ink-3">IP</span>
+                            <span className="font-mono text-ink-2">{cell.enb_ip}</span>
+                          </span>
                         </div>
                       </li>
                     );

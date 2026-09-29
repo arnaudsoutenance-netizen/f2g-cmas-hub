@@ -50,38 +50,97 @@ function When({ iso }: { iso: string | null }) {
 export function DetailsPanel({ alert }: { alert: AlertDetail }) {
   const alertClass = classifyMessageId(alert.message_id);
   const sub = MESSAGE_ID_SUBLABELS[alert.message_id];
+  
+  // Generate a formatted Alert ID like Nokia (00002611-15548E9)
+  const shortId = alert.id.slice(0, 8).toUpperCase();
+  const messageNum = String(alert.message_id).padStart(8, '0');
+  const formattedAlertId = `${messageNum}-${shortId}`;
+  
   return (
-    <Panel title="Details" description="Identifiers and timing">
+    <Panel title="Alert Info" description="Identifiers and broadcast details">
       <dl className="divide-y divide-hairline py-1">
-        <Row term="Alert ID">
-          <span className="font-mono text-[12px] break-all text-ink-2">{alert.id}</span>
+        {/* State indicator */}
+        <Row term="State">
+          <span className={cn(
+            "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[12px] font-medium",
+            alert.status === "SENT" && "bg-emerald-500/10 text-emerald-600",
+            alert.status === "DRAFT" && "bg-ink/5 text-ink-2",
+            alert.status === "SCHEDULED" && "bg-blue-500/10 text-blue-600",
+            alert.status === "SENDING" && "bg-amber-500/10 text-amber-600",
+            alert.status === "FAILED" && "bg-red-500/10 text-red-600",
+          )}>
+            {alert.status}
+          </span>
         </Row>
+        
+        <Row term="Alert ID">
+          <span className="font-mono text-[13px] text-primary">{formattedAlertId}</span>
+        </Row>
+        
+        <Row term="Message Number">
+          <span className="font-mono tabular-nums">{messageNum}</span>
+        </Row>
+        
+        <Row term="Protocol Version">
+          <span className="font-mono text-ink-2">1.0</span>
+        </Row>
+        
+        <Row term="Gateway ID">
+          <span className="font-mono text-[12px] text-ink-2">CMGW</span>
+        </Row>
+        
         <Row term="Message ID">
           <span className="font-mono tabular-nums">{alert.message_id}</span>
           {sub ? <span className="text-ink-3"> · {sub}</span> : null}
         </Row>
+        
         <Row term="Type">
           {alert.alert_type}
           {alertClass ? <span className="text-ink-3"> · {alertClass.label}</span> : null}
         </Row>
+        
+        <Row term="CAP Identifier">
+          <span className="font-mono text-[12px] text-ink-2">F2G.CMAS.{shortId}</span>
+        </Row>
+        
+        <Row term="Test Alert Type">
+          <span className="text-ink-2">{alertClass?.label ?? "Standard Alert"}</span>
+        </Row>
+        
         <Row term="Duration">{formatDuration(alert.duration)}</Row>
+        
         <Row term="Created">
           <When iso={alert.created_at} />
         </Row>
+        
         {alert.scheduled_at ? (
           <Row term="Scheduled for">
             <When iso={alert.scheduled_at} />
           </Row>
         ) : null}
+        
+        <Row term="Origination Date">
+          <When iso={alert.created_at} />
+        </Row>
+        
         <Row term="Sent">
           <When iso={alert.sent_at} />
         </Row>
+        
         {alert.expires_at ? (
-          <Row term="Expires">
+          <Row term="Expiration Date">
             <When iso={alert.expires_at} />
           </Row>
         ) : null}
-        {alert.created_by_user ? <Row term="Created by">{alert.created_by_user.name}</Row> : null}
+        
+        {alert.created_by_user ? (
+          <>
+            <Row term="Sender Name">{alert.created_by_user.name}</Row>
+            <Row term="Sender">
+              <span className="font-mono text-[12px] text-ink-2">{alert.created_by_user.email}</span>
+            </Row>
+          </>
+        ) : null}
       </dl>
     </Panel>
   );
