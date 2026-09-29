@@ -27,6 +27,14 @@ export const metadata: Metadata = {
   title: { default: "CMAS Hub · F2G", template: "%s · CMAS Hub" },
   description: "Console de diffusion d'alertes d'urgence Cell Broadcast (CMAS/ETWS) pour le Cameroun.",
   robots: { index: false, follow: false },
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+    other: [
+      { rel: "icon", type: "image/png", sizes: "192x192", url: "/icon-192.png" },
+      { rel: "icon", type: "image/png", sizes: "512x512", url: "/icon-512.png" },
+    ],
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

@@ -13,6 +13,10 @@ const badgeVariants = cva(
           "bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80",
         destructive:
           "bg-destructive/10 text-destructive focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 [a]:hover:bg-destructive/20",
+        success:
+          "bg-st-sent text-st-sent-fg focus-visible:ring-st-sent/20 [a]:hover:bg-st-sent/80",
+        warning:
+          "bg-st-scheduled text-st-scheduled-fg focus-visible:ring-st-scheduled/20 [a]:hover:bg-st-scheduled/80",
         outline:
           "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
         ghost:

@@ -1,166 +1,196 @@
 "use client";
 
 import Link from "next/link";
+import { m } from "framer-motion";
 import {
   Plus,
   FileText,
-  AlertTriangle,
-  Clock,
+  MoreVertical,
+  Edit,
+  Trash2,
   Send,
+  Copy,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BentoGrid, BentoCard } from "@/components/magicui/bento-grid";
-import { cn } from "@/lib/utils";
-import { MOCK_TEMPLATES } from "@/lib/stores/alert-store";
-import { ALERT_COLORS } from "@/types";
-
-const categoryIcons: Record<string, React.ReactNode> = {
-  emergency: <AlertTriangle className="h-6 w-6 text-red-500" />,
-  extreme: <AlertTriangle className="h-6 w-6 text-orange-500" />,
-  severe: <AlertTriangle className="h-6 w-6 text-amber-500" />,
-  amber: <AlertTriangle className="h-6 w-6 text-yellow-500" />,
-  test: <Clock className="h-6 w-6 text-emerald-500" />,
-  earthquake: <AlertTriangle className="h-6 w-6 text-red-700" />,
-  tsunami: <AlertTriangle className="h-6 w-6 text-blue-700" />,
-};
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { SeverityBadge } from "@/components/alerts/severity-badge";
+import { LinkButton } from "@/components/shared/link-button";
+import { ErrorState } from "@/components/shared/states";
+import { useTemplates, useDeleteTemplate } from "@/hooks/use-network";
+import { classifyMessageId } from "@/lib/cmas/alert-classes";
+import { formatDuration } from "@/lib/cmas/composer-utils";
+import { pageEnter } from "@/lib/motion";
 
 export default function TemplatesPage() {
+  const { data: templates, isPending, isError, error, refetch } = useTemplates();
+  const deleteTemplate = useDeleteTemplate();
+
+  const handleDelete = async (id: string, name: string) => {
+    if (confirm(`Supprimer le template "${name}" ?`)) {
+      await deleteTemplate.mutateAsync(id);
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <m.div {...pageEnter} className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Templates</h1>
-          <p className="text-muted-foreground">
-            Modèles d&apos;alertes pré-configurés pour un envoi rapide
+          <h1 className="font-display text-[22px] font-semibold text-ink">
+            Modèles
+          </h1>
+          <p className="text-[12px] text-ink-3">
+            Templates d'alertes pré-configurés pour un envoi rapide
           </p>
         </div>
-        <Button variant="outline">
-          <Plus className="h-4 w-4 mr-2" />
-          Créer un template
+        <Button variant="outline" size="sm">
+          <Plus className="size-3.5 mr-1.5" />
+          Créer un modèle
         </Button>
-      </div>
+      </header>
 
-      {/* Template Grid */}
-      <BentoGrid className="grid-cols-1 md:grid-cols-2 lg:grid-cols-3 auto-rows-auto gap-4">
-        {MOCK_TEMPLATES.map((template) => (
-          <Card
-            key={template.id}
-            className="group relative overflow-hidden transition-all duration-200 hover:shadow-lg hover:border-primary/50"
-          >
-            {/* Category indicator */}
-            <div
-              className={cn(
-                "absolute top-0 left-0 w-full h-1",
-                ALERT_COLORS[template.category]
-              )}
-            />
-
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  {categoryIcons[template.category] || (
-                    <FileText className="h-6 w-6 text-muted-foreground" />
-                  )}
-                  <div>
-                    <CardTitle className="text-lg">{template.name}</CardTitle>
-                    <CardDescription className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline" className="text-xs">
-                        {template.alertType}
-                      </Badge>
-                      <Badge
-                        className={cn(
-                          "text-white text-xs",
-                          ALERT_COLORS[template.category]
-                        )}
-                      >
-                        ID {template.messageId}
-                      </Badge>
-                    </CardDescription>
+      {/* Content */}
+      {isError ? (
+        <ErrorState
+          title="Impossible de charger les modèles"
+          error={error}
+          onRetry={() => void refetch()}
+        />
+      ) : isPending ? (
+        <TemplatesGridSkeleton />
+      ) : !templates || templates.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {templates.map((template) => {
+            const alertClass = classifyMessageId(template.message_id);
+            
+            return (
+              <div
+                key={template.id}
+                className="group relative flex flex-col rounded-xl border border-hairline bg-shell p-4 transition-shadow hover:shadow-sm"
+              >
+                {/* Header */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-[14px] font-semibold text-ink">
+                      {template.name}
+                    </h3>
+                    <div className="mt-1 flex items-center gap-2">
+                      <SeverityBadge messageId={template.message_id} />
+                    </div>
                   </div>
+                  
+                  {/* Actions */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger>
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        className="opacity-0 group-hover:opacity-100"
+                      >
+                        <MoreVertical className="size-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>
+                        <Edit className="mr-2 size-4" />
+                        Modifier
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Copy className="mr-2 size-4" />
+                        Dupliquer
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-danger"
+                        onClick={() => handleDelete(template.id, template.name)}
+                      >
+                        <Trash2 className="mr-2 size-4" />
+                        Supprimer
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                {/* Content preview */}
+                <p className="mt-3 line-clamp-2 text-[13px] text-ink-2">
+                  {template.content || "Pas de contenu"}
+                </p>
+
+                {/* Footer */}
+                <div className="mt-auto pt-4 flex items-center justify-between border-t border-hairline">
+                  <span className="text-[11px] text-ink-3">
+                    Durée: {formatDuration(template.default_duration)}
+                  </span>
+                  <LinkButton
+                    size="xs"
+                    variant="outline"
+                    href={`/alerts/new?template=${template.id}`}
+                  >
+                    <Send className="size-3" />
+                    Utiliser
+                  </LinkButton>
                 </div>
               </div>
-            </CardHeader>
+            );
+          })}
+        </div>
+      )}
+    </m.div>
+  );
+}
 
-            <CardContent className="space-y-4">
-              {/* Preview */}
-              <div className="p-3 rounded-lg bg-muted/50 border">
-                <p className="text-sm line-clamp-3">{template.content}</p>
-              </div>
-
-              {/* Meta */}
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>
-                  Durée par défaut:{" "}
-                  {template.defaultDuration >= 3600
-                    ? `${template.defaultDuration / 3600}h`
-                    : `${template.defaultDuration / 60}min`}
-                </span>
-                {template.isActive ? (
-                  <Badge variant="secondary" className="text-xs">
-                    Actif
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="text-xs">
-                    Inactif
-                  </Badge>
-                )}
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-2">
-                <Link href={`/alerts/new?template=${template.id}`} className="flex-1">
-                  <Button className="w-full" size="sm">
-                    <Send className="h-4 w-4 mr-2" />
-                    Utiliser
-                  </Button>
-                </Link>
-                <Button variant="outline" size="sm">
-                  Modifier
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-
-        {/* Create New Template Card */}
-        <Card className="flex items-center justify-center min-h-[250px] border-dashed hover:border-primary/50 cursor-pointer transition-all">
-          <CardContent className="text-center">
-            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-              <Plus className="h-6 w-6 text-muted-foreground" />
+function TemplatesGridSkeleton() {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <div
+          key={i}
+          className="flex flex-col rounded-xl border border-hairline bg-shell p-4"
+        >
+          <div className="flex items-start justify-between">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-5 w-20 rounded-full" />
             </div>
-            <p className="font-medium">Créer un nouveau template</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Configurez un modèle réutilisable
-            </p>
-          </CardContent>
-        </Card>
-      </BentoGrid>
+          </div>
+          <div className="mt-3 space-y-1.5">
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-2/3" />
+          </div>
+          <div className="mt-4 flex items-center justify-between border-t border-hairline pt-4">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-6 w-16 rounded" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
-      {/* Info Section */}
-      <Card className="bg-muted/30">
-        <CardContent className="flex items-start gap-4 py-6">
-          <div className="p-3 rounded-lg bg-primary/10">
-            <FileText className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-semibold mb-1">
-              Qu&apos;est-ce qu&apos;un template ?
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Les templates sont des modèles d&apos;alertes pré-configurés qui
-              permettent d&apos;envoyer rapidement des alertes en situation
-              d&apos;urgence. Chaque template définit le type d&apos;alerte, le
-              Message ID, un contenu par défaut et une durée de validité.
-              Utilisez-les pour gagner du temps lors d&apos;une situation
-              critique.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center rounded-xl border border-hairline bg-shell py-16 text-center">
+      <FileText className="size-10 text-ink-3/50" />
+      <h3 className="mt-3 text-[15px] font-medium text-ink">
+        Aucun modèle
+      </h3>
+      <p className="mt-1 max-w-sm text-[13px] text-ink-3">
+        Créez des modèles pour accélérer la rédaction de vos alertes récurrentes
+      </p>
+      <Button variant="outline" size="sm" className="mt-4">
+        <Plus className="size-3.5 mr-1.5" />
+        Créer un modèle
+      </Button>
     </div>
   );
 }
