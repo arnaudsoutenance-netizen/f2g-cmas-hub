@@ -49,8 +49,8 @@ class Settings(BaseSettings):
     ]
     # Deployed frontends (production + Vercel previews of the f2g-cmas-hub project)
     CORS_ORIGIN_REGEX: Optional[str] = (
-        r"https://f2g-cmas-hub\.vercel\.app"
-        r"|https://f2g-cmas-[a-z0-9]+-rush-limitlesslokagst\.vercel\.app"
+        r"https://.*\.vercel\.app"
+        r"|https://.*\.onrender\.com"
     )
 
 
