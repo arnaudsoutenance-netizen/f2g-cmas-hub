@@ -2,6 +2,7 @@
 
 import { ClassMixPanel } from "@/components/dashboard/class-mix-panel";
 import { CommandHero } from "@/components/dashboard/command-hero";
+import { ConnectivityPanel } from "@/components/dashboard/connectivity-panel";
 import { InfrastructureStats } from "@/components/dashboard/infrastructure-stats";
 import { KpiTiles } from "@/components/dashboard/kpi-tiles";
 import { NetworkStatusPanel } from "@/components/dashboard/network-status-panel";
@@ -36,6 +37,17 @@ export default function DashboardPage() {
         lastSent={lastSent.data?.data[0]}
         userName={user.data?.name}
       />
+
+      {/* System Connectivity: CBC → MME → eNBs → Cells */}
+      {stats.data?.network && (
+        <ConnectivityPanel
+          mmeStatus={stats.data.network.mmes_connected > 0 ? "connected" : "disconnected"}
+          enbsConnected={stats.data.network.enbs_connected}
+          enbsTotal={stats.data.cells.total}
+          cellsOnline={stats.data.network.cells_online}
+          cellsTotal={stats.data.cells.total}
+        />
+      )}
 
       {/* Infrastructure Stats: eNBs, MMEs, Cells - requested by Luis */}
       {stats.data?.network && (
