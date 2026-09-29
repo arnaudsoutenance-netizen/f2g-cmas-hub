@@ -5,6 +5,9 @@ import { enUS } from "date-fns/locale";
 import { RadioTower, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { EmptyState, ErrorState } from "@/components/shared/states";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCells } from "@/hooks/use-network";
 import { groupCellsByRegion } from "@/lib/cmas/composer-utils";
@@ -30,16 +33,13 @@ function TriCheckbox({ checked, indeterminate, disabled, onChange, label }: {
   label: string;
 }) {
   return (
-    <input
-      type="checkbox"
+    <Checkbox
       aria-label={label}
       checked={checked}
+      indeterminate={indeterminate}
       disabled={disabled}
-      ref={(el) => {
-        if (el) el.indeterminate = Boolean(indeterminate);
-      }}
-      onChange={onChange}
-      className="size-4 shrink-0 accent-[var(--primary)] disabled:opacity-40"
+      onCheckedChange={onChange}
+      className="size-4"
     />
   );
 }
@@ -81,26 +81,27 @@ export function CellTargetSelector({ value, onChange, presidential = false }: Ce
   const allActiveSelected = activeCells.length > 0 && activeCells.every((c) => selected.has(c.id));
 
   return (
-    <div className="overflow-hidden rounded-[12px] border border-hairline bg-shell">
+    <div className="overflow-hidden rounded-[12px] border border-hairline bg-surface">
       <div className="flex flex-wrap items-center gap-3 border-b border-hairline px-4 py-3">
         <label className="relative min-w-[200px] flex-1">
           <span className="sr-only">Search for a cell</span>
           <Search aria-hidden className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ink-3" />
-          <input
+          <Input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Cell name or identifier…"
-            className="h-9 w-full rounded-[8px] border border-control-border bg-shell pr-3 pl-9 text-[13px] text-ink placeholder:text-ink-3"
+            className="h-9 rounded-[8px] border-control-border bg-surface pr-3 pl-9 text-[13px] text-ink placeholder:text-ink-3 md:text-[13px]"
           />
         </label>
-        <button
-          type="button"
+        <Button
+          variant="outline"
+          size="md"
           onClick={() => onChange(allActiveSelected ? [] : activeCells.map((c) => c.id))}
-          className="h-9 rounded-[8px] border border-control-border px-3 text-[13px] font-medium text-ink hover:bg-surface-hover"
+          className="rounded-[8px] text-[13px]"
         >
           {allActiveSelected ? "Deselect all" : "All active cells (national)"}
-        </button>
+        </Button>
         <span className="font-mono text-[12px] text-ink-2 tabular-nums">
           {value.length} selected / {activeCells.length} active
         </span>
@@ -130,7 +131,7 @@ export function CellTargetSelector({ value, onChange, presidential = false }: Ce
                   const canSelect = selectable(cell);
                   return (
                     <li key={cell.id}>
-                      <label className={cn("flex h-11 items-center gap-3 px-4 pl-11 text-[13px]", canSelect ? "cursor-pointer hover:bg-surface-hover" : "cursor-not-allowed opacity-70")}>
+                      <label className={cn("flex min-h-11 items-center gap-3 py-1.5 pr-4 pl-8 text-[13px] sm:pl-11", canSelect ? "cursor-pointer hover:bg-surface-hover" : "cursor-not-allowed opacity-70")}>
                         <TriCheckbox
                           label={cell.name}
                           checked={selected.has(cell.id)}
@@ -146,7 +147,7 @@ export function CellTargetSelector({ value, onChange, presidential = false }: Ce
                         />
                         <span className="min-w-0 flex-1 truncate font-medium text-ink">{cell.name}</span>
                         <span className="hidden font-mono text-[12px] text-ink-3 sm:inline">{cell.cell_id}</span>
-                        <span className={cn("w-32 text-right text-[12px]", canSelect ? "text-ink-3" : "text-st-failed-fg")}>
+                        <span className={cn("w-24 shrink-0 text-right text-[12px] sm:w-32", canSelect ? "text-ink-3" : "text-st-failed-fg")}>
                           {cellState(cell.status) === "offline"
                             ? "Offline"
                             : cellState(cell.status) === "maintenance"

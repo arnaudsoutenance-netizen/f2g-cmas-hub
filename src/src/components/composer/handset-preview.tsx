@@ -1,5 +1,7 @@
 "use client";
 
+import { Radio } from "@base-ui/react/radio";
+import { RadioGroup } from "@base-ui/react/radio-group";
 import { AnimatePresence, m, useReducedMotion } from "framer-motion";
 import { BatteryMedium, LockKeyhole, SignalHigh } from "lucide-react";
 import { useState } from "react";
@@ -86,20 +88,25 @@ export function HandsetPreview({ messageId, message, className }: HandsetPreview
         </div>
       </m.div>
 
-      <div role="radiogroup" aria-label="Preview platform" className="flex rounded-[8px] bg-surface-sunken p-1 text-[12px]">
+      <RadioGroup
+        aria-label="Preview platform"
+        value={platform}
+        onValueChange={(next) => setPlatform(next === "ios" ? "ios" : "android")}
+        className="flex rounded-[8px] bg-surface-sunken p-1 text-[12px]"
+      >
         {(["android", "ios"] as const).map((p) => (
-          <button
+          <Radio.Root
             key={p}
-            type="button"
-            role="radio"
-            aria-checked={platform === p}
-            onClick={() => setPlatform(p)}
-            className={cn("h-7 rounded-[6px] px-3 font-medium", platform === p ? "bg-shell text-ink shadow-e1" : "text-ink-3 hover:text-ink")}
+            value={p}
+            className={cn(
+              "h-7 min-w-[64px] rounded-[6px] px-3 font-medium focus-visible:outline-offset-0",
+              platform === p ? "bg-surface text-ink shadow-e1" : "text-ink-3 hover:text-ink",
+            )}
           >
             {p === "android" ? "Android" : "iOS"}
-          </button>
+          </Radio.Root>
         ))}
-      </div>
+      </RadioGroup>
       <figcaption className="max-w-[300px] text-center text-[12px] leading-[18px] text-ink-3">
         Indicative preview. The title and sound depend on the handset; only the text body is controlled by the console.
       </figcaption>

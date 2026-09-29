@@ -689,11 +689,21 @@ export interface components {
             /** Last Health Check */
             last_health_check: string | null;
         };
+        /** NetworkStats */
+        NetworkStats: {
+            /** eNBs Connected */
+            enbs_connected: number;
+            /** MMEs Connected */
+            mmes_connected: number;
+            /** Cells Online */
+            cells_online: number;
+        };
         /** DashboardStats */
         DashboardStats: {
             alerts: components["schemas"]["AlertStats"];
             today: components["schemas"]["TodayStats"];
             cells: components["schemas"]["CellStats"];
+            network: components["schemas"]["NetworkStats"];
             /** Success Rate */
             success_rate: number;
         };

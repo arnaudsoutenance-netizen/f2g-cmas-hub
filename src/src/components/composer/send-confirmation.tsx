@@ -4,6 +4,8 @@ import { CircleX, LoaderCircle, LockKeyhole, RotateCw } from "lucide-react";
 import { useId, useState } from "react";
 import { SeverityBadge } from "@/components/alerts/severity-badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { classifyMessageId } from "@/lib/cmas/alert-classes";
 import type { CbsSizing } from "@/lib/cmas/cbs-encoding";
@@ -111,13 +113,7 @@ export function SendConfirmation({ open, onOpenChange, draft, onConfirm, pending
 
           {level === "standard" && (
             <label htmlFor={ids.check} className="flex cursor-pointer items-start gap-3 text-[14px] text-ink">
-              <input
-                id={ids.check}
-                type="checkbox"
-                checked={reviewed}
-                onChange={(e) => setReviewed(e.target.checked)}
-                className="mt-1 size-4 accent-[var(--primary)]"
-              />
+              <Checkbox id={ids.check} checked={reviewed} onCheckedChange={setReviewed} className="mt-1" />
               I have reviewed the message and checked the target cells.
             </label>
           )}
@@ -127,13 +123,13 @@ export function SendConfirmation({ open, onOpenChange, draft, onConfirm, pending
               <label htmlFor={ids.phrase} className="text-[13px] text-ink-2">
                 To confirm, type <strong className="font-mono text-ink">{PRESIDENTIAL_PHRASE}</strong>
               </label>
-              <input
+              <Input
                 id={ids.phrase}
                 value={phrase}
                 onChange={(e) => setPhrase(e.target.value)}
                 autoComplete="off"
                 spellCheck={false}
-                className="h-11 w-full rounded-[8px] border border-control-border bg-shell px-3 font-mono text-[15px] text-ink uppercase"
+                className="h-11 rounded-[8px] border-control-border bg-surface px-3 font-mono text-[15px] text-ink uppercase md:text-[15px]"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") confirm();
                 }}
@@ -151,9 +147,9 @@ export function SendConfirmation({ open, onOpenChange, draft, onConfirm, pending
             <div role="alert" className="flex items-start gap-2.5 rounded-[8px] border border-danger/30 bg-danger-tint p-3 text-[13px] text-danger">
               <CircleX aria-hidden className="mt-0.5 size-4 shrink-0" />
               <span className="flex-1">{error}</span>
-              <button type="button" onClick={confirm} className="flex items-center gap-1 font-medium underline-offset-2 hover:underline">
+              <Button variant="link" size="sm" onClick={confirm} className="h-auto p-0 text-danger">
                 <RotateCw aria-hidden className="size-3.5" /> Retry
-              </button>
+              </Button>
             </div>
           )}
         </div>

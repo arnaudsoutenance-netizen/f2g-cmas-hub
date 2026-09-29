@@ -28,6 +28,7 @@ export type CellSiteUpdateInput = Schemas["CellSiteUpdate"];
 export type CellHealth = Schemas["CellStatusResponse"];
 
 export type DashboardStats = Schemas["DashboardStats"];
+export type NetworkStats = Schemas["NetworkStats"];
 export type User = Schemas["UserResponse"];
 export type AccessToken = Schemas["Token"];
 export type PaginationMeta = Schemas["PaginationMeta"];

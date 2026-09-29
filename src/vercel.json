@@ -2,9 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "buildCommand": "pnpm build",
+  "outputDirectory": ".next",
   "installCommand": "pnpm install",
-  "regions": ["cdg1"],
-  "env": {
-    "NEXT_PUBLIC_API_URL": "https://f2g-yoga-7-2-in-1-14iml9.tail2c3e06.ts.net/api/v1"
-  }
+  "regions": ["cdg1"]
 }

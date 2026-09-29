@@ -4,6 +4,7 @@ import { CircleCheck, TriangleAlert, WandSparkles } from "lucide-react";
 import { useId, useMemo } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { CBS_MAX_PAGES, measureCbs } from "@/lib/cmas/cbs-encoding";
 import { convertToGsm7 } from "@/lib/cmas/composer-utils";
 import { cn } from "@/lib/utils";
@@ -35,14 +36,14 @@ export function MessageComposer({ value, onChange, invalid }: MessageComposerPro
     <div className="space-y-2">
       <div
         className={cn(
-          "overflow-hidden rounded-[12px] border bg-shell focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus",
+          "overflow-hidden rounded-[12px] border bg-surface focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus",
           !sizing.fits || invalid ? "border-danger" : "border-control-border",
         )}
       >
         <label htmlFor={ids.textarea} className="sr-only">
           Alert message
         </label>
-        <textarea
+        <Textarea
           id={ids.textarea}
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -50,7 +51,7 @@ export function MessageComposer({ value, onChange, invalid }: MessageComposerPro
           aria-describedby={ids.meter}
           placeholder="Write the message exactly as it will appear on handsets. Keep it short: what, where, what to do."
           rows={8}
-          className="block max-h-[420px] min-h-[220px] w-full resize-y bg-transparent px-4 py-3.5 text-[16px] leading-[26px] text-ink placeholder:text-ink-3 focus:outline-none"
+          className="block max-h-[420px] min-h-[220px] w-full resize-y rounded-none border-0 bg-transparent px-4 py-3.5 text-[16px] leading-[26px] text-ink [field-sizing:fixed] placeholder:text-ink-3 focus:outline-none focus-visible:ring-0 aria-invalid:ring-0 md:text-[16px] dark:bg-transparent"
         />
         <div
           id={ids.meter}
@@ -91,7 +92,7 @@ export function MessageComposer({ value, onChange, invalid }: MessageComposerPro
           </span>
           <span className="flex flex-wrap gap-1">
             {sizing.nonGsmChars.map((ch) => (
-              <kbd key={ch} className="rounded-[4px] bg-shell px-1.5 font-mono text-[12px] text-ink">
+              <kbd key={ch} className="rounded-[4px] bg-surface px-1.5 font-mono text-[12px] text-ink">
                 {ch === " " ? "space" : ch}
               </kbd>
             ))}

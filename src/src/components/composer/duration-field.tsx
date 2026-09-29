@@ -1,7 +1,10 @@
 "use client";
 
 import { CalendarClock, Clock } from "lucide-react";
+import { Slider } from "@base-ui/react/slider";
 import { useId } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   clampDuration,
   DURATION_MAX_S,
@@ -22,53 +25,63 @@ function stopIndex(seconds: number): number {
 }
 
 export function DurationField({ value, onChange }: { value: number; onChange: (seconds: number) => void }) {
-  const ids = { slider: useId(), minutes: useId() };
+  const ids = { slider: useId(), minutes: useId(), label: useId() };
 
   return (
     <div className="space-y-5">
       <div className="space-y-3">
         <div className="flex items-baseline justify-between">
-          <label htmlFor={ids.slider} className="text-[13px] font-medium text-ink-2">
+          <span id={ids.label} className="text-[13px] font-medium text-ink-2">
             Broadcast duration (cell repetition)
-          </label>
+          </span>
           <span className="font-mono text-[15px] font-medium text-ink tabular-nums">{formatDuration(value)}</span>
         </div>
-        <input
+        <Slider.Root
           id={ids.slider}
-          type="range"
           min={0}
           max={DURATION_STOPS_S.length - 1}
           step={1}
           value={stopIndex(value)}
-          onChange={(e) => onChange(DURATION_STOPS_S[Number(e.target.value)] ?? value)}
-          aria-valuetext={formatDuration(value)}
-          className="w-full accent-[var(--primary)]"
-        />
+          onValueChange={(index) => onChange(DURATION_STOPS_S[index] ?? value)}
+          aria-labelledby={ids.label}
+        >
+          <Slider.Control className="flex h-6 w-full touch-none items-center select-none">
+            <Slider.Track className="relative h-1.5 w-full rounded-full bg-hairline-strong">
+              <Slider.Indicator className="rounded-full bg-primary" />
+              <Slider.Thumb
+                aria-labelledby={ids.label}
+                getAriaValueText={() => formatDuration(value)}
+                className="size-5 rounded-full border-2 border-primary bg-surface shadow-e1 outline-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus"
+              />
+            </Slider.Track>
+          </Slider.Control>
+        </Slider.Root>
         <div className="flex flex-wrap items-center gap-2">
           {DURATION_PRESETS_S.map((preset) => (
-            <button
+            <Button
               key={preset}
-              type="button"
+              variant="outline"
+              size="sm"
               aria-pressed={value === preset}
               onClick={() => onChange(preset)}
               className={cn(
-                "h-8 rounded-[8px] border px-3 font-mono text-[12px] transition-colors",
-                value === preset ? "border-primary bg-navy-tint text-primary" : "border-control-border text-ink-2 hover:bg-surface-hover",
+                "h-8 rounded-[8px] px-3 font-mono text-[12px]",
+                value === preset ? "border-primary bg-navy-tint text-primary hover:bg-navy-tint" : "text-ink-2",
               )}
             >
               {formatDuration(preset)}
-            </button>
+            </Button>
           ))}
           <label htmlFor={ids.minutes} className="ml-auto flex items-center gap-2 text-[12px] text-ink-3">
             Exact
-            <input
+            <Input
               id={ids.minutes}
               type="number"
               min={DURATION_MIN_S / 60}
               max={DURATION_MAX_S / 60}
               value={Math.round(value / 60)}
               onChange={(e) => onChange(clampDuration(Number(e.target.value) * 60))}
-              className="h-8 w-20 rounded-[8px] border border-control-border bg-shell px-2 text-right font-mono text-[13px] text-ink"
+              className="h-8 w-20 rounded-[8px] border-control-border bg-surface px-2 text-right font-mono text-[13px] text-ink md:text-[13px]"
             />
             min
           </label>

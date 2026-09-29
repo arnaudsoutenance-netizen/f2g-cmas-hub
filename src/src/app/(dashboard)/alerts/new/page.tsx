@@ -1,56 +1,46 @@
 "use client";
 
-import { m } from "framer-motion";
-import { Check, LibraryBig, Save } from "lucide-react";
+import { AnimatePresence, m, useReducedMotion } from "framer-motion";
+import { ChevronLeft, ChevronRight, Save, Send, Smartphone } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
+import { type KeyboardEvent, Suspense, useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { SeverityBadge } from "@/components/alerts/severity-badge";
 import { AlertClassPicker } from "@/components/composer/alert-class-picker";
 import { CellTargetSelector } from "@/components/composer/cell-target-selector";
 import { DurationField } from "@/components/composer/duration-field";
 import { HandsetPreview } from "@/components/composer/handset-preview";
 import { MessageComposer } from "@/components/composer/message-composer";
 import { SendConfirmation } from "@/components/composer/send-confirmation";
-import { SeverityBadge } from "@/components/alerts/severity-badge";
+import { ReviewSummary } from "@/components/composer-wizard/review-summary";
+import { StepHint } from "@/components/composer-wizard/step-hint";
+import { StepPanel } from "@/components/composer-wizard/step-panel";
+import { LAST_STEP, type StepIndex, type StepStatus, toStepIndex, WIZARD_STEPS } from "@/components/composer-wizard/steps";
+import { TemplateLoader } from "@/components/composer-wizard/template-loader";
+import { WizardStepper } from "@/components/composer-wizard/wizard-stepper";
 import { Button } from "@/components/ui/button";
 import { useCreateAlert, useSendAlert } from "@/hooks/use-alerts";
 import { useCells, useTemplates } from "@/hooks/use-network";
 import { ApiError } from "@/lib/api/client";
 import { classifyMessageId } from "@/lib/cmas/alert-classes";
 import { measureCbs } from "@/lib/cmas/cbs-encoding";
+import { cellState } from "@/lib/cmas/cell-state";
 import { formatDuration } from "@/lib/cmas/composer-utils";
-import { pageEnter } from "@/lib/motion";
+import { dur, ease, pageEnter } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import type { AlertCreateInput } from "@/types/domain";
-import { cellState } from "@/lib/cmas/cell-state";
-
-const STEPS = [
-  { id: "classe", label: "Class" },
-  { id: "message", label: "Message" },
-  { id: "cellules", label: "Cells" },
-  { id: "duree", label: "Duration and send" },
-] as const;
-
-function Section({ id, index, title, children }: { id: string; index: number; title: string; children: React.ReactNode }) {
-  return (
-    <section id={id} aria-labelledby={`${id}-title`} className="scroll-mt-28 rounded-[12px] bg-shell p-5 sm:p-6">
-      <h2 id={`${id}-title`} className="mb-5 flex items-center gap-3 text-[18px] leading-[26px] font-semibold text-ink">
-        <span className="grid size-7 place-items-center rounded-full bg-navy-tint font-mono text-[13px] text-primary">{index}</span>
-        {title}
-      </h2>
-      {children}
-    </section>
-  );
-}
 
 function errorText(error: unknown): string {
   if (error instanceof ApiError) return error.message;
   return "Broadcast failed. Please try again.";
 }
 
+const INTERACTIVE = "button, a, input, textarea, select, [role=radio], [role=checkbox], [role=slider], [contenteditable=true]";
+
 function Composer() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const reduce = useReducedMotion();
   const { data: templates } = useTemplates({ active_only: true });
   const { data: cells } = useCells();
   const createAlert = useCreateAlert();
@@ -65,24 +55,56 @@ function Composer() {
   const [sendError, setSendError] = useState<string | null>(null);
   const [appliedTemplateParam, setAppliedTemplateParam] = useState<string | null>(null);
 
+  // Wizard position: the current step, the furthest step reached, and the travel direction for the transition.
+  const [step, setStep] = useState<StepIndex>(0);
+  const [furthest, setFurthest] = useState<StepIndex>(0);
+  const [direction, setDirection] = useState<1 | -1>(1);
+  const [previewOpen, setPreviewOpen] = useState(false);
+
+  // Focus moves to the new step's heading once it is mounted (after the exit transition).
+  const focusPending = useRef(false);
+  const headingRef = useCallback((el: HTMLHeadingElement | null) => {
+    if (el && focusPending.current) {
+      focusPending.current = false;
+      el.focus();
+    }
+  }, []);
+
   const sizing = useMemo(() => measureCbs(message), [message]);
   const alertClass = messageId === null ? undefined : classifyMessageId(messageId);
 
-  const applyTemplate = (id: string) => {
+  const jumpTo = (target: StepIndex, focus: boolean) => {
+    setDirection(target >= step ? 1 : -1);
+    setStep(target);
+    setFurthest((f) => (target > f ? target : f));
+    focusPending.current = focus;
+  };
+
+  const applyTemplate = (id: string): boolean => {
     const tpl = templates?.find((t) => t.id === id);
-    if (!tpl) return;
+    if (!tpl) return false;
     setTemplateId(tpl.id);
     setMessageId(tpl.message_id);
     setMessage(tpl.content);
     setDurationS(tpl.default_duration);
+    return true;
   };
 
-  // Prefill from ?template=<id> once templates are loaded (e.g. "Use" in the gallery).
+  // Prefill from ?template=<id> once templates are loaded (e.g. "Use" in the gallery), then open step 03.
   const templateParam = searchParams.get("template");
   if (templateParam && templates && appliedTemplateParam !== templateParam) {
     setAppliedTemplateParam(templateParam);
-    applyTemplate(templateParam);
+    if (applyTemplate(templateParam)) {
+      setStep(2);
+      setFurthest(2);
+    }
   }
+
+  const loadTemplate = (id: string) => {
+    if (!applyTemplate(id)) return;
+    toast("Template loaded", { description: "Class, message and duration prefilled. Choose the target cells." });
+    if (step < 2) jumpTo(2, true);
+  };
 
   const onClassChange = (id: number) => {
     setMessageId(id);
@@ -92,21 +114,40 @@ function Composer() {
     }
   };
 
-  const done = {
-    classe: alertClass !== undefined,
-    message: message.trim().length > 0 && sizing.fits,
-    cellules: cellIds.length > 0,
-    duree: true,
+  const valid: Record<StepIndex, boolean> = {
+    0: alertClass !== undefined,
+    1: message.trim().length > 0 && sizing.fits,
+    2: cellIds.length > 0,
+    3: true,
   };
-  const blocker = !done.classe
-    ? "Choose an alert class."
-    : !done.message
-      ? message.trim().length === 0
-        ? "Write the message."
-        : "The message exceeds the maximum size."
-      : !done.cellules
-        ? "Select at least one cell."
-        : null;
+  const stepBlocker: Record<StepIndex, string | null> = {
+    0: valid[0] ? null : "Choose an alert class to continue.",
+    1: valid[1] ? null : message.trim().length === 0 ? "Write the message to continue." : "Shorten the message: it exceeds the maximum size.",
+    2: valid[2] ? null : "Select at least one cell to continue.",
+    3: null,
+  };
+  const blocker = stepBlocker[0] ?? stepBlocker[1] ?? stepBlocker[2];
+
+  const reachable = (i: StepIndex) => i <= furthest && WIZARD_STEPS.slice(0, i).every((s) => valid[s.index]);
+  const statusOf = (i: StepIndex): StepStatus =>
+    i === step ? "current" : i < LAST_STEP && i <= furthest && valid[i] ? "done" : "todo";
+
+  const goNext = () => {
+    if (step < LAST_STEP && valid[step]) jumpTo(toStepIndex(step + 1), true);
+  };
+  const goBack = () => {
+    if (step > 0) jumpTo(toStepIndex(step - 1), true);
+  };
+
+  // Enter on a non-interactive target (e.g. the focused step heading), or Ctrl/⌘+Enter from anywhere, moves on.
+  const onStepKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== "Enter" || e.nativeEvent.isComposing || step === LAST_STEP) return;
+    const withModifier = e.ctrlKey || e.metaKey;
+    if (!withModifier && e.target instanceof HTMLElement && e.target.closest(INTERACTIVE)) return;
+    if (!valid[step]) return;
+    e.preventDefault();
+    goNext();
+  };
 
   const payload = (): AlertCreateInput | null =>
     alertClass && messageId !== null
@@ -158,79 +199,141 @@ function Composer() {
   };
 
   const pending = createAlert.isPending || sendAlert.isPending;
+  const current = WIZARD_STEPS[step] ?? WIZARD_STEPS[0];
+  const hintId = `wizard-hint-${step}`;
+  const offset = reduce ? 0 : 16;
+
+  const backButton =
+    step > 0 ? (
+      <Button variant="outline" size="md" onClick={goBack} className="rounded-[8px]">
+        <ChevronLeft aria-hidden className="size-4" /> Back
+      </Button>
+    ) : null;
+
+  const footer =
+    step < LAST_STEP ? (
+      <>
+        {backButton}
+        <StepHint id={hintId} blocker={stepBlocker[step]} className="order-last basis-full sm:order-none sm:basis-auto sm:flex-1" />
+        <span className="ml-auto hidden text-[12px] text-ink-3 lg:inline">
+          <kbd className="rounded-[4px] border border-hairline-strong bg-surface px-1.5 font-mono text-[11px] text-ink-2">Ctrl</kbd>{" "}
+          <kbd className="rounded-[4px] border border-hairline-strong bg-surface px-1.5 font-mono text-[11px] text-ink-2">Enter</kbd>
+        </span>
+        <Button
+          size="lg"
+          onClick={goNext}
+          disabled={!valid[step]}
+          focusableWhenDisabled
+          aria-describedby={hintId}
+          className="ml-auto rounded-[8px] lg:ml-0"
+        >
+          Next: {WIZARD_STEPS[step + 1]?.label}
+          <ChevronRight aria-hidden className="size-4" />
+        </Button>
+      </>
+    ) : (
+      <>
+        {backButton}
+        <StepHint id={hintId} blocker={blocker} className="order-last basis-full sm:order-none sm:basis-auto sm:flex-1" />
+        <div className="ml-auto flex w-full flex-wrap items-center gap-2 sm:w-auto">
+          <Button variant="outline" size="lg" className="flex-1 rounded-[8px] sm:flex-none" disabled={blocker !== null || pending} onClick={saveDraft}>
+            <Save aria-hidden className="size-4" /> Save draft
+          </Button>
+          <Button
+            size="lg"
+            className="flex-1 rounded-[8px] sm:flex-none"
+            disabled={blocker !== null || pending}
+            aria-describedby={hintId}
+            onClick={() => setConfirmOpen(true)}
+          >
+            <Send aria-hidden className="size-4" /> Review and broadcast
+          </Button>
+        </div>
+      </>
+    );
 
   return (
-    <m.div {...pageEnter} className="space-y-5">
-      <header className="flex flex-wrap items-center justify-between gap-4 rounded-[12px] bg-shell px-5 py-4 sm:px-6">
+    <m.div {...pageEnter} className="space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-[24px] leading-[30px] font-semibold text-ink">New alert</h1>
-          <p className="text-[13px] text-ink-3">Class, message, cells, duration: check the preview before broadcasting.</p>
+          <h1 className="font-display text-[28px] leading-tight font-bold text-ink">New alert</h1>
+          <p className="mt-0.5 text-[14px] text-ink-3">Four steps: class, message, cells, then review. Nothing is broadcast until you confirm.</p>
         </div>
-        {templates && templates.length > 0 && (
-          <label className="flex items-center gap-2 text-[13px] text-ink-2">
-            <LibraryBig aria-hidden className="size-4" />
-            <span className="sr-only sm:not-sr-only">Load a template</span>
-            <select
-              value={templateId ?? ""}
-              onChange={(e) => e.target.value && applyTemplate(e.target.value)}
-              className="h-10 max-w-[260px] rounded-[8px] border border-control-border bg-shell px-3 text-[13px] text-ink"
-            >
-              <option value="">Choose a template…</option>
-              {templates.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name} · {t.message_id}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
+        {templates && templates.length > 0 && <TemplateLoader templates={templates} value={templateId} onLoad={loadTemplate} />}
       </header>
 
-      <div className="grid gap-5 lg:grid-cols-12">
-        <nav aria-label="Steps" className="hidden lg:col-span-2 lg:block">
-          <ol className="sticky top-28 space-y-1 rounded-[12px] bg-shell p-3">
-            {STEPS.map((step, i) => (
-              <li key={step.id}>
-                <a
-                  href={`#${step.id}`}
-                  className="flex items-center gap-2.5 rounded-[8px] px-2.5 py-2 text-[13px] text-ink-2 hover:bg-surface-hover hover:text-ink"
-                >
-                  <span
-                    className={cn(
-                      "grid size-6 shrink-0 place-items-center rounded-full border font-mono text-[11px]",
-                      done[step.id] ? "border-st-sent bg-st-sent-tint text-st-sent-fg" : "border-hairline-strong text-ink-3",
-                    )}
-                  >
-                    {done[step.id] ? <Check aria-hidden className="size-3.5" /> : i + 1}
-                  </span>
-                  {step.label}
-                </a>
-              </li>
-            ))}
-          </ol>
-        </nav>
+      <WizardStepper current={step} statusOf={statusOf} reachable={reachable} onSelect={(i) => reachable(i) && jumpTo(i, true)} />
 
-        <div className="space-y-5 lg:col-span-6">
-          <Section id="classe" index={1} title="Alert class">
-            <AlertClassPicker value={messageId} onChange={onClassChange} />
-          </Section>
-          <Section id="message" index={2} title="Message">
-            <MessageComposer value={message} onChange={setMessage} />
-          </Section>
-          <Section id="cellules" index={3} title="Target cells">
-            <CellTargetSelector value={cellIds} onChange={setCellIds} presidential={alertClass?.confirmLevel === "presidential"} />
-          </Section>
-          <Section id="duree" index={4} title="Duration and send">
-            <DurationField value={durationS} onChange={setDurationS} />
-          </Section>
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div onKeyDown={onStepKeyDown} className="min-w-0">
+          <AnimatePresence mode="wait" initial={false} custom={direction}>
+            <m.div
+              key={step}
+              custom={direction}
+              variants={{
+                enter: (d: number) => ({ opacity: 0, x: d * offset }),
+                center: { opacity: 1, x: 0 },
+                exit: (d: number) => ({ opacity: 0, x: -d * offset }),
+              }}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: dur.base, ease: ease.standard }}
+            >
+              <StepPanel step={current} headingRef={headingRef} footer={footer}>
+                {step === 0 && <AlertClassPicker value={messageId} onChange={onClassChange} />}
+                {step === 1 && <MessageComposer value={message} onChange={setMessage} />}
+                {step === 2 && (
+                  <CellTargetSelector value={cellIds} onChange={setCellIds} presidential={alertClass?.confirmLevel === "presidential"} />
+                )}
+                {step === 3 && (
+                  <div className="space-y-6">
+                    <ReviewSummary
+                      messageId={messageId}
+                      message={message}
+                      sizing={sizing}
+                      cellIds={cellIds}
+                      cells={cells}
+                      durationS={durationS}
+                      onEdit={(i) => jumpTo(i, true)}
+                    />
+                    <section aria-labelledby="wizard-duration-title" className="space-y-3">
+                      <h3 id="wizard-duration-title" className="font-display text-[17px] leading-tight font-semibold text-ink">
+                        Duration and timing
+                      </h3>
+                      <DurationField value={durationS} onChange={setDurationS} />
+                    </section>
+                  </div>
+                )}
+              </StepPanel>
+            </m.div>
+          </AnimatePresence>
         </div>
 
-        <aside className="lg:col-span-4">
-          <div className="sticky top-28 space-y-4 rounded-[12px] bg-shell p-5">
-            <HandsetPreview messageId={messageId} message={message} />
-            <dl className="grid grid-cols-[96px_1fr] gap-y-1.5 border-t border-hairline pt-4 text-[13px]">
+        <aside aria-label="Handset preview" className="lg:sticky lg:top-28">
+          <div className="overflow-hidden rounded-[16px] border border-hairline bg-surface shadow-e1">
+            <div className="flex items-center justify-between gap-3 border-b border-hairline px-5 py-4">
+              <div>
+                <h2 className="font-display text-[17px] leading-tight font-semibold text-ink">Handset preview</h2>
+                <p className="mt-0.5 text-[12px] text-ink-3">Updates as you compose.</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="lg:hidden"
+                aria-expanded={previewOpen}
+                aria-controls="wizard-preview-body"
+                onClick={() => setPreviewOpen((o) => !o)}
+              >
+                <Smartphone aria-hidden className="size-3.5" /> {previewOpen ? "Hide" : "Show"}
+              </Button>
+            </div>
+            <div id="wizard-preview-body" className={cn("space-y-4 p-5", previewOpen ? "block" : "hidden", "lg:block")}>
+              <HandsetPreview messageId={messageId} message={message} />
+            </div>
+            <dl className="grid grid-cols-[88px_1fr] gap-y-1.5 border-t border-hairline px-5 py-4 text-[13px]">
               <dt className="text-ink-3">Class</dt>
-              <dd>{messageId !== null ? <SeverityBadge messageId={messageId} size="sm" /> : <span className="text-ink-3">—</span>}</dd>
+              <dd>{messageId !== null ? <SeverityBadge messageId={messageId} size="sm" /> : <span className="text-ink-3">Not chosen</span>}</dd>
               <dt className="text-ink-3">Cells</dt>
               <dd className="font-mono text-ink tabular-nums">{cellIds.length}</dd>
               <dt className="text-ink-3">Encoding</dt>
@@ -240,15 +343,6 @@ function Composer() {
               <dt className="text-ink-3">Duration</dt>
               <dd className="font-mono text-ink">{formatDuration(durationS)} · immediate</dd>
             </dl>
-            <div className="space-y-2">
-              <Button size="lg" className="w-full rounded-[8px]" disabled={blocker !== null || pending} onClick={() => setConfirmOpen(true)}>
-                Review and broadcast
-              </Button>
-              {blocker && <p className="text-center text-[12px] text-ink-3">{blocker}</p>}
-              <Button variant="ghost" size="md" className="w-full" disabled={blocker !== null || pending} onClick={saveDraft}>
-                <Save aria-hidden className="size-4" /> Save draft
-              </Button>
-            </div>
           </div>
         </aside>
       </div>

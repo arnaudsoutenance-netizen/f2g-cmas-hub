@@ -2,6 +2,7 @@
 
 import { ClassMixPanel } from "@/components/dashboard/class-mix-panel";
 import { CommandHero } from "@/components/dashboard/command-hero";
+import { InfrastructureStats } from "@/components/dashboard/infrastructure-stats";
 import { KpiTiles } from "@/components/dashboard/kpi-tiles";
 import { NetworkStatusPanel } from "@/components/dashboard/network-status-panel";
 import { QuickTemplates } from "@/components/dashboard/quick-templates";
@@ -35,6 +36,11 @@ export default function DashboardPage() {
         lastSent={lastSent.data?.data[0]}
         userName={user.data?.name}
       />
+
+      {/* Infrastructure Stats: eNBs, MMEs, Cells - requested by Luis */}
+      {stats.data?.network && (
+        <InfrastructureStats stats={stats.data.network} />
+      )}
 
       {stats.isError ? (
         <ErrorState title="Unable to load statistics" error={stats.error} onRetry={() => void stats.refetch()} />
