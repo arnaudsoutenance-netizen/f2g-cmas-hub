@@ -34,7 +34,7 @@ export default function TemplatesPage() {
   const deleteTemplate = useDeleteTemplate();
 
   const handleDelete = async (id: string, name: string) => {
-    if (confirm(`Supprimer le template "${name}" ?`)) {
+    if (confirm(`Delete le template "${name}" ?`)) {
       await deleteTemplate.mutateAsync(id);
     }
   };
@@ -45,22 +45,22 @@ export default function TemplatesPage() {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-[22px] font-semibold text-ink">
-            Modèles
+            Templates
           </h1>
           <p className="text-[12px] text-ink-3">
-            Templates d'alertes pré-configurés pour un envoi rapide
+            Pre-configured alert templates for quick broadcasting
           </p>
         </div>
         <Button variant="outline" size="sm">
           <Plus className="size-3.5 mr-1.5" />
-          Créer un modèle
+          Create Template
         </Button>
       </header>
 
       {/* Content */}
       {isError ? (
         <ErrorState
-          title="Impossible de charger les modèles"
+          title="Failed to load templates"
           error={error}
           onRetry={() => void refetch()}
         />
@@ -103,11 +103,11 @@ export default function TemplatesPage() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem>
                         <Edit className="mr-2 size-4" />
-                        Modifier
+                        Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem>
                         <Copy className="mr-2 size-4" />
-                        Dupliquer
+                        Duplicate
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
@@ -115,7 +115,7 @@ export default function TemplatesPage() {
                         onClick={() => handleDelete(template.id, template.name)}
                       >
                         <Trash2 className="mr-2 size-4" />
-                        Supprimer
+                        Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -123,13 +123,13 @@ export default function TemplatesPage() {
 
                 {/* Content preview */}
                 <p className="mt-3 line-clamp-2 text-[13px] text-ink-2">
-                  {template.content || "Pas de contenu"}
+                  {template.content || "No content"}
                 </p>
 
                 {/* Footer */}
                 <div className="mt-auto pt-4 flex items-center justify-between border-t border-hairline">
                   <span className="text-[11px] text-ink-3">
-                    Durée: {formatDuration(template.default_duration)}
+                    Duration: {formatDuration(template.default_duration)}
                   </span>
                   <LinkButton
                     size="xs"
@@ -137,7 +137,7 @@ export default function TemplatesPage() {
                     href={`/alerts/new?template=${template.id}`}
                   >
                     <Send className="size-3" />
-                    Utiliser
+                    Use
                   </LinkButton>
                 </div>
               </div>
@@ -182,14 +182,14 @@ function EmptyState() {
     <div className="flex flex-col items-center justify-center rounded-xl border border-hairline bg-shell py-16 text-center">
       <FileText className="size-10 text-ink-3/50" />
       <h3 className="mt-3 text-[15px] font-medium text-ink">
-        Aucun modèle
+        No templates
       </h3>
       <p className="mt-1 max-w-sm text-[13px] text-ink-3">
-        Créez des modèles pour accélérer la rédaction de vos alertes récurrentes
+        Create templates to speed up composing recurring alerts
       </p>
       <Button variant="outline" size="sm" className="mt-4">
         <Plus className="size-3.5 mr-1.5" />
-        Créer un modèle
+        Create Template
       </Button>
     </div>
   );

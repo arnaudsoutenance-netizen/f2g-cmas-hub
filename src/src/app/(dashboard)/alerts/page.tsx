@@ -53,12 +53,12 @@ import { pageEnter } from "@/lib/motion";
 import type { AlertStatus } from "@/types/domain";
 
 const STATUS_TABS: { value: AlertStatus | "all"; label: string }[] = [
-  { value: "all", label: "Toutes" },
-  { value: "DRAFT", label: "Brouillons" },
-  { value: "SCHEDULED", label: "Programmées" },
-  { value: "SENDING", label: "En cours" },
-  { value: "SENT", label: "Envoyées" },
-  { value: "FAILED", label: "Échecs" },
+  { value: "all", label: "All" },
+  { value: "DRAFT", label: "Drafts" },
+  { value: "SCHEDULED", label: "Scheduled" },
+  { value: "SENDING", label: "Sending" },
+  { value: "SENT", label: "Sent" },
+  { value: "FAILED", label: "Failed" },
 ];
 
 export default function AlertsPage() {
@@ -99,7 +99,7 @@ export default function AlertsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Supprimer cette alerte ?")) {
+    if (confirm("Delete cette alerte ?")) {
       await deleteAlert.mutateAsync(id);
     }
   };
@@ -110,14 +110,14 @@ export default function AlertsPage() {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-[22px] font-semibold text-ink">
-            Alertes
+            Alerts
           </h1>
           <p className="text-[12px] text-ink-3">
-            Gérez et suivez vos alertes Cell Broadcast
+            Manage and track your Cell Broadcast alerts
           </p>
         </div>
         <LinkButton size="sm" href="/alerts/new">
-          <Plus className="size-3.5" /> Nouvelle alerte
+          <Plus className="size-3.5" /> New Alert
         </LinkButton>
       </header>
 
@@ -127,7 +127,7 @@ export default function AlertsPage() {
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-ink-3" />
           <Input
-            placeholder="Rechercher par contenu ou ID..."
+            placeholder="Search by content or ID..."
             className="h-8 pl-8 text-[13px]"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -144,7 +144,7 @@ export default function AlertsPage() {
             <SelectValue placeholder="Type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tous les types</SelectItem>
+            <SelectItem value="all">All types</SelectItem>
             <SelectItem value="CMAS">CMAS</SelectItem>
             <SelectItem value="ETWS">ETWS</SelectItem>
           </SelectContent>
@@ -211,7 +211,7 @@ export default function AlertsPage() {
                       className="block hover:underline"
                     >
                       <p className="line-clamp-1 text-[13px] font-medium text-ink">
-                        {alert.content || "Sans contenu"}
+                        {alert.content || "No content"}
                       </p>
                       <p className="text-[11px] font-mono text-ink-3">
                         {alert.id.slice(0, 8)}
@@ -272,7 +272,7 @@ export default function AlertsPage() {
                         <DropdownMenuItem>
                           <Link href={`/alerts/${alert.id}`} className="flex items-center">
                             <Eye className="mr-2 size-4" />
-                            Voir détails
+                            View details
                           </Link>
                         </DropdownMenuItem>
                         {(alert.status === "DRAFT" ||
@@ -280,19 +280,19 @@ export default function AlertsPage() {
                           <DropdownMenuItem>
                             <Link href={`/alerts/${alert.id}/edit`} className="flex items-center">
                               <Edit className="mr-2 size-4" />
-                              Modifier
+                              Edit
                             </Link>
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuItem>
                           <Copy className="mr-2 size-4" />
-                          Dupliquer
+                          Duplicate
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         {alert.status === "SCHEDULED" && (
                           <DropdownMenuItem className="text-danger">
                             <XCircle className="mr-2 size-4" />
-                            Annuler
+                            Cancel
                           </DropdownMenuItem>
                         )}
                         {alert.status === "DRAFT" && (
@@ -301,7 +301,7 @@ export default function AlertsPage() {
                             onClick={() => handleDelete(alert.id)}
                           >
                             <Trash2 className="mr-2 size-4" />
-                            Supprimer
+                            Delete
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>
@@ -349,18 +349,18 @@ function EmptyState({
     <div className="flex flex-col items-center justify-center rounded-xl border border-hairline bg-shell py-16 text-center">
       <Activity className="size-10 text-ink-3/50" />
       <h3 className="mt-3 text-[15px] font-medium text-ink">
-        Aucune alerte trouvée
+        No alerts found
       </h3>
       <p className="mt-1 text-[13px] text-ink-3">
         {searchQuery
-          ? "Essayez de modifier vos critères de recherche"
+          ? "Try adjusting your search criteria"
           : statusFilter !== "all"
-            ? `Aucune alerte avec le statut "${statusFilter}"`
-            : "Créez votre première alerte pour commencer"}
+            ? `No alerts with status "${statusFilter}"`
+            : "Create your first alert to get started"}
       </p>
       {!searchQuery && statusFilter === "all" && (
         <LinkButton size="sm" href="/alerts/new" className="mt-4">
-          <Plus className="size-3.5" /> Créer une alerte
+          <Plus className="size-3.5" /> Create Alert
         </LinkButton>
       )}
     </div>

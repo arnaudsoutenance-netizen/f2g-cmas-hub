@@ -132,6 +132,8 @@
   @keyframes status-pulse { from { transform: scale(1); opacity: .5; } to { transform: scale(2.4); opacity: 0; } }
   .kpi-flash { animation: kpi-flash 0.4s var(--ease-standard); }
   @keyframes kpi-flash { from { background-color: var(--primary-tint); } to { background-color: transparent; } }
+  .animate-caret { animation: caret-blink 0.9s steps(1, end) infinite; }
+  @keyframes caret-blink { 50% { opacity: 0; } }
   @media (prefers-reduced-motion: reduce) {
     .status-pulse::after { animation: none; transform: none; opacity: 1; background: transparent; box-shadow: 0 0 0 2px currentColor; }
     .animate-spin, .animate-pulse { animation: none; }

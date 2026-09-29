@@ -45,14 +45,14 @@ export default function DashboardPage() {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-[22px] font-semibold leading-tight text-ink">
-            Tableau de bord
+            Dashboard
           </h1>
           <p className="text-[12px] text-ink-3">
-            {format(new Date(), "EEEE d MMMM · HH:mm", { locale: fr })} WAT
+            {format(new Date(), "EEEE, MMMM d · HH:mm", { locale: fr })} WAT
           </p>
         </div>
         <LinkButton size="sm" href="/alerts/new">
-          <Plus className="size-3.5" /> Nouvelle alerte
+          <Plus className="size-3.5" /> New Alert
         </LinkButton>
       </header>
 
@@ -78,13 +78,13 @@ export default function DashboardPage() {
               <div className="relative flex items-start justify-between">
                 <div>
                   <p className="text-[11px] font-medium uppercase tracking-wide text-white/60">
-                    Alertes envoyées
+                    Alerts Sent
                   </p>
                   <p className="mt-1 font-display text-[36px] font-bold leading-none text-white tabular-nums">
                     <CountUp value={stats.alerts.sent} />
                   </p>
                   <p className="mt-1.5 text-[11px] text-white/50">
-                    Total depuis le début
+                    Total since inception
                   </p>
                 </div>
                 <div className="flex size-10 items-center justify-center rounded-lg bg-white/10">
@@ -101,13 +101,13 @@ export default function DashboardPage() {
               <div className="relative flex items-start justify-between">
                 <div>
                   <p className="text-[11px] font-medium uppercase tracking-wide text-white/60">
-                    Cellules actives
+                    Active Cells
                   </p>
                   <p className="mt-1 font-display text-[36px] font-bold leading-none text-white tabular-nums">
                     <CountUp value={stats.cells?.active ?? 0} />
                   </p>
                   <p className="mt-1.5 text-[11px] text-white/50">
-                    {stats.cells ? `Sur ${stats.cells.total} au total` : "—"}
+                    {stats.cells ? `of ${stats.cells.total} total` : "—"}
                   </p>
                 </div>
                 <div className="flex size-10 items-center justify-center rounded-lg bg-white/10">
@@ -120,7 +120,7 @@ export default function DashboardPage() {
           {/* Secondary Stats - Compact row */}
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <StatCard
-              label="Taux de succès"
+              label="Success Rate"
               value={
                 stats.alerts.sent + stats.alerts.failed > 0
                   ? `${stats.success_rate}%`
@@ -131,8 +131,8 @@ export default function DashboardPage() {
                 stats.success_rate >= 95
                   ? "Excellent"
                   : stats.success_rate >= 90
-                    ? "Bon"
-                    : "À améliorer"
+                    ? "Good"
+                    : "Needs improvement"
               }
               detailColor={
                 stats.success_rate >= 95
@@ -143,22 +143,22 @@ export default function DashboardPage() {
               }
             />
             <StatCard
-              label="Aujourd'hui"
+              label="Today"
               value={stats.today.sent}
               icon={Clock}
-              detail={`${stats.today.scheduled} programmée${stats.today.scheduled !== 1 ? "s" : ""}`}
+              detail={`${stats.today.scheduled} scheduled${stats.today.scheduled !== 1 ? "s" : ""}`}
             />
             <StatCard
-              label="Brouillons"
+              label="Drafts"
               value={stats.alerts.draft}
               icon={FileText}
-              detail="En attente"
+              detail="Pending"
             />
             <StatCard
-              label="Échecs"
+              label="Failed"
               value={stats.alerts.failed}
               icon={CircleAlert}
-              detail={stats.alerts.failed > 0 ? "À vérifier" : "Aucun"}
+              detail={stats.alerts.failed > 0 ? "Check required" : "None"}
               detailColor={stats.alerts.failed > 0 ? "text-st-failed-fg" : undefined}
             />
           </div>
@@ -171,14 +171,14 @@ export default function DashboardPage() {
         <section className="rounded-xl border border-hairline bg-shell lg:col-span-8">
           <div className="flex items-center justify-between border-b border-hairline px-4 py-3">
             <div>
-              <h2 className="text-[14px] font-semibold text-ink">Alertes récentes</h2>
-              <p className="text-[11px] text-ink-3">Dernière activité</p>
+              <h2 className="text-[14px] font-semibold text-ink">Recent Alerts</h2>
+              <p className="text-[11px] text-ink-3">Latest activity</p>
             </div>
             <Link
               href="/alerts"
               className="text-[12px] font-medium text-link hover:underline"
             >
-              Tout voir →
+              View all →
             </Link>
           </div>
 
@@ -198,9 +198,9 @@ export default function DashboardPage() {
           ) : alerts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Activity className="size-8 text-ink-3/50" />
-              <p className="mt-2 text-[13px] text-ink-3">Aucune alerte récente</p>
+              <p className="mt-2 text-[13px] text-ink-3">Nonee alerte récente</p>
               <LinkButton size="sm" variant="outline" href="/alerts/new" className="mt-3">
-                Créer une alerte
+                Create alert
               </LinkButton>
             </div>
           ) : (
@@ -217,7 +217,7 @@ export default function DashboardPage() {
                   {/* Content */}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13px] font-medium text-ink">
-                      {alert.content || "Sans contenu"}
+                      {alert.content || "No content"}
                     </p>
                     <p className="flex items-center gap-1.5 text-[11px] text-ink-3">
                       <span className="font-mono">{alert.message_id}</span>
@@ -242,8 +242,8 @@ export default function DashboardPage() {
         {/* Network Panel */}
         <section className="rounded-xl border border-hairline bg-shell lg:col-span-4">
           <div className="border-b border-hairline px-4 py-3">
-            <h2 className="text-[14px] font-semibold text-ink">Réseau</h2>
-            <p className="text-[11px] text-ink-3">État des cellules</p>
+            <h2 className="text-[14px] font-semibold text-ink">Network</h2>
+            <p className="text-[11px] text-ink-3">Cell status</p>
           </div>
           <div className="p-4">
             <NetworkPanel />
