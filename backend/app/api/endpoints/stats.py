@@ -14,6 +14,7 @@ from app.schemas import (
     AlertStats,
     TodayStats,
     CellStats,
+    NetworkStats,
 )
 
 
@@ -89,6 +90,17 @@ async def get_dashboard_stats(
     )
     cell_offline = cell_offline_result.scalar() or 0
     
+    # Network stats (eNBs and MMEs)
+    # Count unique eNBs by IP (each cell has an eNB IP)
+    enb_result = await db.execute(
+        select(func.count(func.distinct(CellSite.enb_ip))).where(CellSite.status == "active")
+    )
+    enbs_connected = enb_result.scalar() or 0
+    
+    # MME count: For now, we assume 1 MME (Open5GS) per deployment
+    # In production, this could be fetched from a network_elements table
+    mmes_connected = 1 if cell_active > 0 else 0
+    
     # Success rate
     total_sent_or_failed = sent + failed
     success_rate = (sent / total_sent_or_failed * 100) if total_sent_or_failed > 0 else 100.0
@@ -109,6 +121,11 @@ async def get_dashboard_stats(
             total=cell_total,
             active=cell_active,
             offline=cell_offline
+        ),
+        network=NetworkStats(
+            enbs_connected=enbs_connected,
+            mmes_connected=mmes_connected,
+            cells_online=cell_active
         ),
         success_rate=round(success_rate, 1)
     )

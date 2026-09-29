@@ -284,10 +284,17 @@ class CellStats(BaseModel):
     offline: int
 
 
+class NetworkStats(BaseModel):
+    enbs_connected: int
+    mmes_connected: int
+    cells_online: int
+
+
 class DashboardStats(BaseModel):
     alerts: AlertStats
     today: TodayStats
     cells: CellStats
+    network: NetworkStats
     success_rate: float
 
 
