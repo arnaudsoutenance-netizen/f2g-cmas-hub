@@ -1,8 +1,9 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { formatDistanceToNowStrict } from "date-fns";
 import { enUS } from "date-fns/locale";
-import { RadioTower, Search } from "lucide-react";
+import { List, Map, RadioTower, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { EmptyState, ErrorState } from "@/components/shared/states";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,22 @@ import { groupCellsByRegion } from "@/lib/cmas/composer-utils";
 import { cn } from "@/lib/utils";
 import type { CellSite } from "@/types/domain";
 import { cellState } from "@/lib/cmas/cell-state";
+
+// Dynamic import for the map component (client-only)
+const CellMapView = dynamic(
+  () => import("./cell-map-view").then((mod) => mod.CellMapView),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[400px] items-center justify-center rounded-xl border border-hairline bg-surface-sunken">
+        <div className="text-center">
+          <Map className="mx-auto size-8 text-ink-3 animate-pulse" />
+          <p className="mt-2 text-[13px] text-ink-3">Loading map...</p>
+        </div>
+      </div>
+    ),
+  }
+);
 
 interface CellTargetSelectorProps {
   value: string[];
@@ -47,6 +64,7 @@ function TriCheckbox({ checked, indeterminate, disabled, onChange, label }: {
 export function CellTargetSelector({ value, onChange, presidential = false }: CellTargetSelectorProps) {
   const { data: cells, isPending, isError, error, refetch } = useCells();
   const [query, setQuery] = useState("");
+  const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const selected = useMemo(() => new Set(value), [value]);
 
   const filtered = useMemo(() => {
@@ -78,10 +96,67 @@ export function CellTargetSelector({ value, onChange, presidential = false }: Ce
     onChange([...next]);
   };
 
+  const toggleSingle = (id: string) => {
+    toggle([id], !selected.has(id));
+  };
+
+  const selectAllOnline = () => {
+    onChange(activeCells.map((c) => c.id));
+  };
+
+  const deselectAll = () => {
+    onChange([]);
+  };
+
   const allActiveSelected = activeCells.length > 0 && activeCells.every((c) => selected.has(c.id));
 
   return (
-    <div className="overflow-hidden rounded-[12px] border border-hairline bg-surface">
+    <div className="space-y-4">
+      {/* View mode toggle */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="inline-flex rounded-lg border border-hairline bg-surface-sunken p-1">
+          <button
+            type="button"
+            onClick={() => setViewMode("list")}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors",
+              viewMode === "list"
+                ? "bg-surface text-ink shadow-sm"
+                : "text-ink-2 hover:text-ink"
+            )}
+          >
+            <List className="size-4" />
+            List
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("map")}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors",
+              viewMode === "map"
+                ? "bg-surface text-ink shadow-sm"
+                : "text-ink-2 hover:text-ink"
+            )}
+          >
+            <Map className="size-4" />
+            Map
+          </button>
+        </div>
+        <span className="font-mono text-[12px] text-ink-2 tabular-nums">
+          {value.length} selected / {activeCells.length} active
+        </span>
+      </div>
+
+      {viewMode === "map" ? (
+        <CellMapView
+          cells={cells}
+          selectedIds={value}
+          onToggleCell={toggleSingle}
+          onSelectAll={selectAllOnline}
+          onDeselectAll={deselectAll}
+        />
+      ) : (
+        <div className="overflow-hidden rounded-[12px] border border-hairline bg-surface">
       <div className="flex flex-wrap items-center gap-3 border-b border-hairline px-4 py-3">
         <label className="relative min-w-[200px] flex-1">
           <span className="sr-only">Search for a cell</span>
@@ -168,6 +243,22 @@ export function CellTargetSelector({ value, onChange, presidential = false }: Ce
 
       {(offlineCount > 0 || (presidential && value.length < activeCells.length)) && (
         <div className="space-y-1 border-t border-hairline bg-surface-sunken px-4 py-2.5 text-[12px]">
+          {offlineCount > 0 && (
+            <p className="text-st-failed-fg">
+              {offlineCount} offline or maintenance cell{offlineCount === 1 ? "" : "s"} cannot be targeted.
+            </p>
+          )}
+          {presidential && value.length < activeCells.length && (
+            <p className="text-sev-presidential-fg">A presidential alert is normally national: all active cells.</p>
+          )}
+        </div>
+      )}
+    </div>
+      )}
+
+      {/* Warnings shown in both modes */}
+      {(offlineCount > 0 || (presidential && value.length < activeCells.length)) && (
+        <div className="space-y-1 rounded-lg border border-hairline bg-surface-sunken px-4 py-2.5 text-[12px]">
           {offlineCount > 0 && (
             <p className="text-st-failed-fg">
               {offlineCount} offline or maintenance cell{offlineCount === 1 ? "" : "s"} cannot be targeted.
