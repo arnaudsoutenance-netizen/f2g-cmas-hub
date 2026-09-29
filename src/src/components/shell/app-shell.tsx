@@ -7,7 +7,7 @@ import { AppRail } from "./app-rail";
 // EnvRibbon removed - not needed in production
 import { TopBar } from "./top-bar";
 
-const COLLAPSE_KEY = "cmas-hub-rail-collapsed";
+const COLLAPSE_KEY = "cmas-hub-rail-collapsed-v2";
 
 function readCollapsed(): boolean {
   if (typeof window === "undefined") return true; // Default collapsed on SSR
