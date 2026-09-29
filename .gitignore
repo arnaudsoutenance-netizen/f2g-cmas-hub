@@ -1,0 +1,7 @@
+# Runtime output (per-part ignores live in src/.gitignore and backend/.gitignore)
+logs/
+*.bak-*
+.DS_Store
+.env
+.env.*
+!.env.example
