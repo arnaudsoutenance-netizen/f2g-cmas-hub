@@ -7,6 +7,7 @@ import { type KeyboardEvent, Suspense, useCallback, useMemo, useRef, useState } 
 import { toast } from "sonner";
 import { SeverityBadge } from "@/components/alerts/severity-badge";
 import { AlertClassPicker } from "@/components/composer/alert-class-picker";
+import { CapFieldsEditor, type CapFields } from "@/components/composer/cap-fields-editor";
 import { CellTargetSelector } from "@/components/composer/cell-target-selector";
 import { DurationField } from "@/components/composer/duration-field";
 import { HandsetPreview } from "@/components/composer/handset-preview";
@@ -54,6 +55,18 @@ function Composer() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [appliedTemplateParam, setAppliedTemplateParam] = useState<string | null>(null);
+  
+  // CAP fields (Common Alerting Protocol)
+  const [capFields, setCapFields] = useState<Partial<CapFields>>({
+    category: "Safety",
+    severity: "Severe",
+    urgency: "Immediate",
+    certainty: "Observed",
+    responseType: "Monitor",
+    language: "en",
+    eventCode: "CEM",
+    senderName: "F2G CMAS Hub",
+  });
 
   // Wizard position: the current step, the furthest step reached, and the travel direction for the transition.
   const [step, setStep] = useState<StepIndex>(0);
@@ -95,15 +108,15 @@ function Composer() {
   if (templateParam && templates && appliedTemplateParam !== templateParam) {
     setAppliedTemplateParam(templateParam);
     if (applyTemplate(templateParam)) {
-      setStep(2);
-      setFurthest(2);
+      setStep(3);
+      setFurthest(3);
     }
   }
 
   const loadTemplate = (id: string) => {
     if (!applyTemplate(id)) return;
     toast("Template loaded", { description: "Class, message and duration prefilled. Choose the target cells." });
-    if (step < 2) jumpTo(2, true);
+    if (step < 3) jumpTo(3, true);
   };
 
   const onClassChange = (id: number) => {
@@ -116,17 +129,19 @@ function Composer() {
 
   const valid: Record<StepIndex, boolean> = {
     0: alertClass !== undefined,
-    1: message.trim().length > 0 && sizing.fits,
-    2: cellIds.length > 0,
-    3: true,
+    1: capFields.category !== undefined && capFields.severity !== undefined,
+    2: message.trim().length > 0 && sizing.fits,
+    3: cellIds.length > 0,
+    4: true,
   };
   const stepBlocker: Record<StepIndex, string | null> = {
     0: valid[0] ? null : "Choose an alert class to continue.",
-    1: valid[1] ? null : message.trim().length === 0 ? "Write the message to continue." : "Shorten the message: it exceeds the maximum size.",
-    2: valid[2] ? null : "Select at least one cell to continue.",
-    3: null,
+    1: valid[1] ? null : "Select category and severity to continue.",
+    2: valid[2] ? null : message.trim().length === 0 ? "Write the message to continue." : "Shorten the message: it exceeds the maximum size.",
+    3: valid[3] ? null : "Select at least one cell to continue.",
+    4: null,
   };
-  const blocker = stepBlocker[0] ?? stepBlocker[1] ?? stepBlocker[2];
+  const blocker = stepBlocker[0] ?? stepBlocker[1] ?? stepBlocker[2] ?? stepBlocker[3];
 
   const reachable = (i: StepIndex) => i <= furthest && WIZARD_STEPS.slice(0, i).every((s) => valid[s.index]);
   const statusOf = (i: StepIndex): StepStatus =>
@@ -282,11 +297,12 @@ function Composer() {
             >
               <StepPanel step={current} headingRef={headingRef} footer={footer}>
                 {step === 0 && <AlertClassPicker value={messageId} onChange={onClassChange} />}
-                {step === 1 && <MessageComposer value={message} onChange={setMessage} />}
-                {step === 2 && (
+                {step === 1 && <CapFieldsEditor value={capFields} onChange={setCapFields} />}
+                {step === 2 && <MessageComposer value={message} onChange={setMessage} />}
+                {step === 3 && (
                   <CellTargetSelector value={cellIds} onChange={setCellIds} presidential={alertClass?.confirmLevel === "presidential"} />
                 )}
-                {step === 3 && (
+                {step === 4 && (
                   <div className="space-y-6">
                     <ReviewSummary
                       messageId={messageId}
