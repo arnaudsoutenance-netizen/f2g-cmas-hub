@@ -24,7 +24,7 @@ import { ErrorState } from "@/components/shared/states";
 import { LinkButton } from "@/components/shared/link-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAlerts } from "@/hooks/use-alerts";
-import { useStats, useCells } from "@/hooks/use-network";
+import { useStats } from "@/hooks/use-network";
 
 const pageEnter = {
   initial: { opacity: 0, y: 8 },
@@ -41,10 +41,8 @@ export default function DashboardPage() {
     refetch: refetchStats,
   } = useStats();
   const { data: alertsData, isPending: alertsPending } = useAlerts({ limit: 5 });
-  const { data: cellsData } = useCells();
 
   const alerts = alertsData?.data ?? [];
-  const cells = cellsData ?? [];
 
   return (
     <LazyMotion features={domAnimation}>
@@ -137,164 +135,75 @@ export default function DashboardPage() {
           </>
         )}
 
-        {/* Main Content Grid */}
-        <div className="grid gap-4 lg:grid-cols-12">
-          {/* Recent Alerts Panel */}
-          <section className="lg:col-span-8">
-            <div className="overflow-hidden rounded-2xl border border-hairline bg-surface">
-              {/* Panel Header */}
-              <div className="flex items-center justify-between border-b border-hairline bg-surface-sunken/50 px-5 py-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
-                    <Activity className="size-4 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-sm font-semibold text-ink">Recent Alerts</h2>
-                    <p className="text-xs text-ink-3">Latest broadcast activity</p>
-                  </div>
+        {/* Main Content - Full Width Recent Alerts */}
+        <section>
+          <div className="overflow-hidden rounded-2xl border border-hairline bg-surface">
+            {/* Panel Header */}
+            <div className="flex items-center justify-between border-b border-hairline bg-surface-sunken/50 px-5 py-4">
+              <div className="flex items-center gap-3">
+                <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
+                  <Activity className="size-4 text-primary" />
                 </div>
-                <Link
-                  href="/alerts"
-                  className="group flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80"
-                >
-                  View all
-                  <ArrowUpRight className="size-3 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                </Link>
+                <div>
+                  <h2 className="text-sm font-semibold text-ink">Recent Alerts</h2>
+                  <p className="text-xs text-ink-3">Latest broadcast activity</p>
+                </div>
               </div>
+              <Link
+                href="/alerts"
+                className="group flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80"
+              >
+                View all
+                <ArrowUpRight className="size-3 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </Link>
+            </div>
 
-              {/* Alerts List */}
-              {alertsPending ? (
-                <AlertsListSkeleton />
-              ) : alerts.length === 0 ? (
-                <EmptyAlerts />
-              ) : (
-                <div className="divide-y divide-hairline">
-                  {alerts.map((alert, idx) => (
-                    <m.div
-                      key={alert.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: idx * 0.05 }}
+            {/* Alerts List */}
+            {alertsPending ? (
+              <AlertsListSkeleton />
+            ) : alerts.length === 0 ? (
+              <EmptyAlerts />
+            ) : (
+              <div className="divide-y divide-hairline">
+                {alerts.map((alert, idx) => (
+                  <m.div
+                    key={alert.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                  >
+                    <Link
+                      href={`/alerts/${alert.id}`}
+                      className="group flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-surface-hover"
                     >
-                      <Link
-                        href={`/alerts/${alert.id}`}
-                        className="group flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-surface-hover"
-                      >
-                        <SeverityBadge messageId={alert.message_id} showId={false} />
-                        
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-ink group-hover:text-primary">
-                            {alert.content || "No content"}
-                          </p>
-                          <div className="mt-0.5 flex items-center gap-2 text-xs text-ink-3">
-                            <code className="rounded bg-surface-sunken px-1.5 py-0.5 font-mono text-[10px]">
-                              {alert.message_id}
-                            </code>
-                            <span>·</span>
-                            <span>
-                              {formatDistanceToNow(new Date(alert.created_at), {
-                                addSuffix: true,
-                                locale: enUS,
-                              })}
-                            </span>
-                          </div>
+                      <SeverityBadge messageId={alert.message_id} showId={false} />
+                      
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-ink group-hover:text-primary">
+                          {alert.content || "No content"}
+                        </p>
+                        <div className="mt-0.5 flex items-center gap-2 text-xs text-ink-3">
+                          <code className="rounded bg-surface-sunken px-1.5 py-0.5 font-mono text-[10px]">
+                            {alert.message_id}
+                          </code>
+                          <span>·</span>
+                          <span>
+                            {formatDistanceToNow(new Date(alert.created_at), {
+                              addSuffix: true,
+                              locale: enUS,
+                            })}
+                          </span>
                         </div>
+                      </div>
 
-                        <AlertStatusPill status={alert.status} size="sm" />
-                      </Link>
-                    </m.div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </section>
-
-          {/* Network Status Panel */}
-          <section className="lg:col-span-4">
-            <div className="overflow-hidden rounded-2xl border border-hairline bg-surface">
-              {/* Panel Header */}
-              <div className="flex items-center justify-between border-b border-hairline bg-surface-sunken/50 px-5 py-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-9 items-center justify-center rounded-xl bg-emerald-500/10">
-                    <Radio className="size-4 text-emerald-600" />
-                  </div>
-                  <div>
-                    <h2 className="text-sm font-semibold text-ink">Network</h2>
-                    <p className="text-xs text-ink-3">Cell site status</p>
-                  </div>
-                </div>
+                      <AlertStatusPill status={alert.status} size="sm" />
+                    </Link>
+                  </m.div>
+                ))}
               </div>
-
-              {/* Network Stats */}
-              <div className="p-5">
-                {/* Summary */}
-                <div className="mb-4 flex items-center justify-between">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-bold tabular-nums text-ink">
-                      {stats?.cells?.active ?? 0}
-                    </span>
-                    <span className="text-sm text-ink-3">
-                      / {stats?.cells?.total ?? 0} active
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs">
-                    <span className="flex size-2 rounded-full bg-emerald-500" />
-                    <span className="text-ink-3">Online</span>
-                  </div>
-                </div>
-
-                {/* Cell Grid */}
-                <div className="mb-4 flex flex-wrap gap-1.5">
-                  {cells.slice(0, 12).map((cell) => (
-                    <div
-                      key={cell.id}
-                      className={cn(
-                        "size-6 rounded-md transition-colors",
-                        cell.status === "ONLINE"
-                          ? "bg-emerald-500"
-                          : cell.status === "MAINTENANCE"
-                            ? "bg-amber-400"
-                            : "bg-red-400"
-                      )}
-                      title={`${cell.name}: ${cell.status}`}
-                    />
-                  ))}
-                </div>
-
-                {/* Legend */}
-                <div className="flex flex-wrap gap-3 border-t border-hairline pt-3 text-xs">
-                  <div className="flex items-center gap-1.5">
-                    <span className="size-2.5 rounded-full bg-emerald-500" />
-                    <span className="text-ink-3">
-                      {cells.filter((c) => c.status === "ONLINE").length} online
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="size-2.5 rounded-full bg-amber-400" />
-                    <span className="text-ink-3">
-                      {cells.filter((c) => c.status === "MAINTENANCE").length} maintenance
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="size-2.5 rounded-full bg-red-400" />
-                    <span className="text-ink-3">
-                      {cells.filter((c) => c.status === "OFFLINE").length} offline
-                    </span>
-                  </div>
-                </div>
-
-                {/* View All Link */}
-                <Link
-                  href="/cells"
-                  className="mt-4 flex items-center justify-center gap-1 rounded-lg border border-hairline py-2 text-xs font-medium text-ink-2 transition-colors hover:border-primary hover:text-primary"
-                >
-                  View all cells
-                  <ArrowUpRight className="size-3" />
-                </Link>
-              </div>
-            </div>
-          </section>
-        </div>
+            )}
+          </div>
+        </section>
       </m.div>
     </LazyMotion>
   );

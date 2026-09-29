@@ -4,7 +4,7 @@ import { useState } from "react";
 import { F2GMark } from "@/components/brand/f2g-mark";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { AppRail } from "./app-rail";
-import { EnvRibbon } from "./env-ribbon";
+// EnvRibbon removed - not needed in production
 import { TopBar } from "./top-bar";
 
 const COLLAPSE_KEY = "cmas-hub-rail-collapsed";
@@ -54,7 +54,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </aside>
         <div className="min-w-0 flex-1 px-0 lg:pr-5">
           <div className="min-h-[calc(100dvh-88px)] overflow-hidden bg-well lg:rounded-t-[12px]">
-            <EnvRibbon />
             <main className="mx-auto w-full max-w-[1600px] p-4 lg:p-5">{children}</main>
           </div>
         </div>
