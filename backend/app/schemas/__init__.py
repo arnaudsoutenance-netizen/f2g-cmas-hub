@@ -213,11 +213,15 @@ class TemplateResponse(TemplateBase):
 class CellSiteBase(BaseModel):
     name: str
     cell_id: str
+    tac: int = Field(default=1, ge=1, le=65535)  # TAC for CMAS zone targeting
     enb_ip: str
     enb_port: int = 22
     enb_username: str = "root"
     enb_config_path: str = "/etc/srsenb/sib.conf"
+    earfcn: Optional[int] = None
+    pci: Optional[int] = None
     location: Optional[str] = None
+    zone_name: Optional[str] = None
 
 
 class CellSiteCreate(CellSiteBase):
@@ -226,11 +230,15 @@ class CellSiteCreate(CellSiteBase):
 
 class CellSiteUpdate(BaseModel):
     name: Optional[str] = None
+    tac: Optional[int] = Field(None, ge=1, le=65535)
     enb_ip: Optional[str] = None
     enb_port: Optional[int] = None
     enb_username: Optional[str] = None
     enb_config_path: Optional[str] = None
+    earfcn: Optional[int] = None
+    pci: Optional[int] = None
     location: Optional[str] = None
+    zone_name: Optional[str] = None
     status: Optional[str] = None
 
 
