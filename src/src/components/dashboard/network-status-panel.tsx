@@ -57,23 +57,28 @@ export function NetworkStatusPanel({ cells, pending }: { cells: readonly CellSit
             {groupCellsByRegion(cells).map(([region, group]) => (
               <li key={region}>
                 <p className="mb-2 text-[11px] font-semibold tracking-[0.1em] text-ink-3 uppercase">{region}</p>
-                <ul className="flex flex-wrap gap-2">
+                <ul className="space-y-2">
                   {group.map((cell) => {
                     const state = cellState(cell.status);
                     const { icon: Icon, className } = STATE_ICON[state];
                     return (
                       <li
                         key={cell.id}
-                        title={`${cell.name} · ${CELL_STATE_LABEL[state]}`}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-hairline bg-surface-sunken py-1 pr-2.5 pl-2 text-[12px] text-ink-2"
+                        className="flex items-center justify-between gap-2 rounded-lg border border-hairline bg-surface-sunken px-3 py-2"
                       >
-                        <Icon aria-hidden className={cn("size-3.5", className)} />
-                        <span className="font-mono">{cell.cell_id}</span>
-                        {state === "online" ? (
-                          <span className="sr-only">Online</span>
-                        ) : (
-                          <span className={cn("text-[11px] font-medium", className)}>{CELL_STATE_LABEL[state]}</span>
-                        )}
+                        <div className="flex items-center gap-2">
+                          <Icon aria-hidden className={cn("size-4", className)} />
+                          <div>
+                            <p className="font-mono text-[13px] font-medium text-ink">{cell.cell_id}</p>
+                            <p className="text-[11px] text-ink-3">{cell.name}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-mono text-[12px] text-ink-2">TAC {cell.tac}</p>
+                          {state !== "online" && (
+                            <p className={cn("text-[11px] font-medium", className)}>{CELL_STATE_LABEL[state]}</p>
+                          )}
+                        </div>
                       </li>
                     );
                   })}

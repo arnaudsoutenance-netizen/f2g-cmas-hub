@@ -615,6 +615,11 @@ export interface components {
             name: string;
             /** Cell Id */
             cell_id: string;
+            /**
+             * TAC - Tracking Area Code for CMAS zone targeting
+             * @default 1
+             */
+            tac: number;
             /** Enb Ip */
             enb_ip: string;
             /**
@@ -632,8 +637,14 @@ export interface components {
              * @default /etc/srsenb/sib.conf
              */
             enb_config_path: string;
+            /** EARFCN - E-UTRA Absolute Radio Frequency Channel Number */
+            earfcn?: number | null;
+            /** PCI - Physical Cell Identity */
+            pci?: number | null;
             /** Location */
             location?: string | null;
+            /** Zone Name */
+            zone_name?: string | null;
             /** Id */
             id: string;
             /** Status */
