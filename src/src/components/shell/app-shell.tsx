@@ -10,11 +10,14 @@ import { TopBar } from "./top-bar";
 const COLLAPSE_KEY = "cmas-hub-rail-collapsed";
 
 function readCollapsed(): boolean {
-  if (typeof window === "undefined") return false;
+  if (typeof window === "undefined") return true; // Default collapsed on SSR
   try {
-    return window.localStorage.getItem(COLLAPSE_KEY) === "1";
+    const stored = window.localStorage.getItem(COLLAPSE_KEY);
+    // If no preference saved, default to collapsed (true)
+    if (stored === null) return true;
+    return stored === "1";
   } catch {
-    return false;
+    return true; // Default collapsed if storage unavailable
   }
 }
 
