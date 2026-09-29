@@ -26,7 +26,7 @@ function lastSeen(cell: CellSite): string {
 export function NetworkPanel() {
   const { data: cells, isPending, isError, error, refetch } = useCells();
 
-  if (isError) return <ErrorState title="Impossible de charger les cellules" error={error} onRetry={() => void refetch()} />;
+  if (isError) return <ErrorState title="Unable to load cells" error={error} onRetry={() => void refetch()} />;
 
   if (isPending) {
     return (
@@ -45,11 +45,11 @@ export function NetworkPanel() {
     <div>
       <p className="flex items-baseline gap-2">
         <span className="text-[28px] leading-8 font-medium tracking-[-0.02em] text-ink tabular-nums">{active.length}</span>
-        <span className="text-[14px] text-ink-3 tabular-nums">actives / {cells.length}</span>
+        <span className="text-[14px] text-ink-3 tabular-nums">active / {cells.length}</span>
       </p>
       <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-ink-2">
         <li className="flex items-center gap-1.5"><span aria-hidden className="size-2 rounded-full bg-st-sent" />{active.length} actives</li>
-        <li className="flex items-center gap-1.5"><span aria-hidden className="size-2 rounded-full bg-st-failed" />{offline.length} hors ligne</li>
+        <li className="flex items-center gap-1.5"><span aria-hidden className="size-2 rounded-full bg-st-failed" />{offline.length} offline</li>
         <li className="flex items-center gap-1.5"><span aria-hidden className="size-2 rounded-full ring-[1.5px] ring-inset ring-ink-3" />{maintenance.length} maintenance</li>
       </ul>
 
@@ -87,7 +87,7 @@ export function NetworkPanel() {
       )}
 
       <Link href="/cells" className="mt-5 inline-block text-[13px] font-medium text-link hover:underline">
-        Voir les cellules →
+        View cells →
       </Link>
     </div>
   );

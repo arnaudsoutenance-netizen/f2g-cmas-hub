@@ -100,7 +100,7 @@ export interface DashboardStats {
 // Message ID configurations
 export const MESSAGE_IDS = {
   CMAS: [
-    { id: 4370, name: "Presidential", description: "Alerte nationale - Pas de opt-out", category: "emergency", optOut: false },
+    { id: 4370, name: "Presidential", description: "National alert - No opt-out", category: "emergency", optOut: false },
     { id: 4371, name: "Extreme Immediate", description: "Menace extrême - Action immédiate", category: "extreme", optOut: false },
     { id: 4372, name: "Extreme Likely", description: "Menace extrême - Probable", category: "extreme", optOut: false },
     { id: 4373, name: "Severe Immediate", description: "Menace grave - Action immédiate", category: "severe", optOut: true },
@@ -108,11 +108,11 @@ export const MESSAGE_IDS = {
     { id: 4375, name: "AMBER Alert", description: "Enfant disparu", category: "amber", optOut: true },
     { id: 4376, name: "RMT", description: "Test mensuel requis", category: "test", optOut: true },
     { id: 4377, name: "Exercise", description: "Exercice/Drill", category: "test", optOut: true },
-    { id: 4378, name: "Operator", description: "Alerte opérateur", category: "operator", optOut: true },
+    { id: 4378, name: "Operator", description: "Operator alert", category: "operator", optOut: true },
   ],
   ETWS: [
-    { id: 4352, name: "Earthquake", description: "Alerte séisme", category: "earthquake", optOut: false },
-    { id: 4353, name: "Tsunami", description: "Alerte tsunami", category: "tsunami", optOut: false },
+    { id: 4352, name: "Earthquake", description: "Earthquake alert", category: "earthquake", optOut: false },
+    { id: 4353, name: "Tsunami", description: "Tsunami alert", category: "tsunami", optOut: false },
     { id: 4354, name: "Earthquake+Tsunami", description: "Séisme et tsunami", category: "combined", optOut: false },
     { id: 4355, name: "Test", description: "Test ETWS", category: "test", optOut: true },
   ],
@@ -144,10 +144,10 @@ export const STATUS_COLORS: Record<AlertStatus, string> = {
 };
 
 export const STATUS_LABELS: Record<AlertStatus, string> = {
-  DRAFT: "Brouillon",
-  SCHEDULED: "Programmée",
-  SENDING: "En cours",
-  SENT: "Envoyée",
+  DRAFT: "Draft",
+  SCHEDULED: "Scheduled",
+  SENDING: "Sending",
+  SENT: "Sent",
   FAILED: "Échec",
-  CANCELLED: "Annulée",
+  CANCELLED: "Cancelled",
 };

@@ -42,7 +42,7 @@ function groupByDay(alerts: Alert[]): Array<{ day: string; items: Alert[] }> {
 export function AlertTimeline({ limit = 8 }: { limit?: number }) {
   const { data, isPending, isError, error, refetch } = useAlerts({ limit, sort_by: "created_at", sort_order: "desc" });
 
-  if (isError) return <ErrorState title="Impossible de charger les alertes" error={error} onRetry={() => void refetch()} />;
+  if (isError) return <ErrorState title="Unable to load alerts" error={error} onRetry={() => void refetch()} />;
 
   if (isPending) {
     return (
@@ -64,11 +64,11 @@ export function AlertTimeline({ limit = 8 }: { limit?: number }) {
     return (
       <EmptyState
         icon={BellRing}
-        title="Aucune alerte diffusée"
-        description="Les alertes créées et envoyées apparaîtront ici, de la plus récente à la plus ancienne."
+        title="No alerts broadcast"
+        description="Created and sent alerts will appear here, from newest to oldest."
         action={
           <LinkButton size="md" href="/alerts/new">
-            Créer une alerte
+            Create alert
           </LinkButton>
         }
       />
@@ -112,7 +112,7 @@ export function AlertTimeline({ limit = 8 }: { limit?: number }) {
                       </div>
                       <p className="mt-1.5 line-clamp-2 text-[13px] leading-5 text-ink-2">« {alert.content} »</p>
                       <p className="mt-1 text-[12px] text-ink-3">
-                        {alert.cells.length} cellule{alert.cells.length > 1 ? "s" : ""}
+                        {alert.cells.length} cell{alert.cells.length > 1 ? "s" : ""}
                       </p>
                     </div>
                     <ArrowRight aria-hidden className="mt-1 size-4 shrink-0 text-ink-3 opacity-0 transition-opacity group-hover:opacity-100" />

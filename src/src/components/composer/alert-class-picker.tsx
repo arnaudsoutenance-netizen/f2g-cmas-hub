@@ -70,7 +70,7 @@ export function AlertClassPicker({ value, onChange, allowed }: AlertClassPickerP
 
   return (
     <div className="space-y-5">
-      <div role="radiogroup" aria-label="Classe d'alerte CMAS" className="space-y-3">
+      <div role="radiogroup" aria-label="CMAS Alert Class" className="space-y-3">
         <p className="text-[11px] font-semibold tracking-[0.08em] text-ink-3 uppercase">CMAS · alertes publiques</p>
         {presidential && (
           <Tile

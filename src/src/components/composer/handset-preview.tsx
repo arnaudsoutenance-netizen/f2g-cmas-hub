@@ -49,7 +49,7 @@ export function HandsetPreview({ messageId, message, className }: HandsetPreview
               <m.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid flex-1 place-items-center px-8 text-center">
                 <span className="flex flex-col items-center gap-2 text-[13px] text-[#C9CED8]">
                   <LockKeyhole aria-hidden className="size-5" />
-                  Choisissez une classe d&apos;alerte
+                  Choose an alert class
                 </span>
               </m.div>
             ) : (

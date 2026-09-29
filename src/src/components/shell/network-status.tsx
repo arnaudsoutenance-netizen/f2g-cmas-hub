@@ -26,7 +26,7 @@ export function NetworkStatus({ compact = false }: { compact?: boolean }) {
     <Popover>
       <PopoverTrigger
         className="flex h-8 items-center gap-2.5 rounded-[var(--radius-sm)] border border-hairline bg-surface px-2.5 text-xs text-ink hover:bg-surface-hover"
-        aria-label={unknown ? "État du réseau inconnu" : `${active} cellules actives sur ${total}`}
+        aria-label={unknown ? "Network status unknown" : `${active} active cells of ${total}`}
       >
         <span className="flex items-center gap-1.5">
           <span
@@ -57,18 +57,18 @@ export function NetworkStatus({ compact = false }: { compact?: boolean }) {
               {active}/{total}
             </span>
             {!compact && offline.length > 0 && (
-              <span className="text-st-failed-fg">· {offline.length} hors ligne</span>
+              <span className="text-st-failed-fg">· {offline.length} offline</span>
             )}
           </>
         )}
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0">
         <div className="border-b border-hairline px-4 py-3">
-          <p className="text-[15px] font-semibold text-ink">Réseau de diffusion</p>
+          <p className="text-[15px] font-semibold text-ink">Broadcast Network</p>
           <p className="text-xs text-ink-3">
             {dataUpdatedAt > 0
               ? `Mis à jour il y a ${formatDistanceToNowStrict(dataUpdatedAt, { locale: fr })}`
-              : "Aucune donnée reçue"}
+              : "No data received"}
           </p>
         </div>
         <ul className="max-h-64 divide-y divide-hairline overflow-y-auto">
@@ -92,13 +92,13 @@ export function NetworkStatus({ compact = false }: { compact?: boolean }) {
             </li>
           ))}
           {!unknown && offline.length + maintenance.length === 0 && (
-            <li className="px-4 py-3 text-[13px] text-ink-2">Toutes les cellules sont actives.</li>
+            <li className="px-4 py-3 text-[13px] text-ink-2">All cells are online.</li>
           )}
           {isError && <li className="px-4 py-3 text-[13px] text-danger">Le serveur ne répond pas.</li>}
         </ul>
         <div className="border-t border-hairline px-4 py-2.5">
           <Link href="/cells" className="text-[13px] font-medium text-link hover:underline">
-            Voir les cellules →
+            View cells →
           </Link>
         </div>
       </PopoverContent>

@@ -29,7 +29,7 @@ export function DurationField({ value, onChange }: { value: number; onChange: (s
       <div className="space-y-3">
         <div className="flex items-baseline justify-between">
           <label htmlFor={ids.slider} className="text-[13px] font-medium text-ink-2">
-            Durée de diffusion (répétition par les cellules)
+            Broadcast duration (cell repetition)
           </label>
           <span className="font-mono text-[15px] font-medium text-ink tabular-nums">{formatDuration(value)}</span>
         </div>
@@ -88,7 +88,7 @@ export function DurationField({ value, onChange }: { value: number; onChange: (s
             <CalendarClock aria-hidden className="mt-0.5 size-4 shrink-0" />
             <span>
               <span className="block font-medium text-ink-2">Programmé · indisponible</span>
-              Le serveur n&apos;a pas encore de planificateur : une alerte programmée ne partirait jamais.
+              The server does not have a scheduler yet: a scheduled alert would never be sent.
             </span>
           </span>
         </div>

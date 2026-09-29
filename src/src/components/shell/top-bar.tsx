@@ -42,7 +42,7 @@ function ActiveAlertsBell() {
   return (
     <Link
       href="/alerts?status=SENDING"
-      aria-label={count > 0 ? `${count} alerte(s) en cours de diffusion` : "Aucune alerte en cours"}
+      aria-label={count > 0 ? `${count} alert(s) currently broadcasting` : "No active alerts"}
       className={cn(tintButton, "relative bg-orange-tint text-orange-fg hover:bg-orange-deep hover:text-white")}
     >
       <Bell aria-hidden className="size-[18px]" />
@@ -64,7 +64,7 @@ export function TopBar({ onToggleMenu, onOpenMobileMenu }: { onToggleMenu: () =>
   return (
     <header className="sticky top-0 z-[var(--z-sticky)] flex h-[88px] items-center gap-4 bg-shell px-4 lg:px-6">
       <div className="flex w-auto items-center gap-6 lg:w-[228px]">
-        <Link href="/" className="hidden items-center gap-2.5 lg:flex" aria-label="CMAS Hub, tableau de bord">
+        <Link href="/" className="hidden items-center gap-2.5 lg:flex" aria-label="CMAS Hub, dashboard">
           <F2GMark />
           <span className="font-display text-[20px] leading-none font-bold text-ink">CMAS Hub</span>
         </Link>
@@ -87,11 +87,11 @@ export function TopBar({ onToggleMenu, onOpenMobileMenu }: { onToggleMenu: () =>
       </div>
 
       <label className="relative hidden w-[434px] max-w-full md:block">
-        <span className="sr-only">Rechercher</span>
+        <span className="sr-only">Search</span>
         <Search aria-hidden className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-ink-3" />
         <input
           type="search"
-          placeholder="Rechercher une alerte, une cellule, un modèle…"
+          placeholder="Search alerts, cells, templates..."
           className="h-12 w-full rounded-[8px] border border-hairline-strong bg-shell pr-4 pl-11 text-[14px] text-ink placeholder:text-ink-3 focus-visible:border-primary focus-visible:outline-none"
           onKeyDown={(e) => {
             if (e.key === "Enter" && e.currentTarget.value.trim()) {
@@ -148,7 +148,7 @@ export function TopBar({ onToggleMenu, onOpenMobileMenu }: { onToggleMenu: () =>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuItem render={<Link href="/settings" />}>
-            <Settings className="size-4" /> Paramètres
+            <Settings className="size-4" /> Settings
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => {

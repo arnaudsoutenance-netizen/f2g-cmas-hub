@@ -9,7 +9,7 @@ import { spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { activeHref, NAV_SECTIONS } from "./nav-items";
 
-const ENV_LABEL = process.env.NEXT_PUBLIC_ENV === "production" ? "Production" : "Formation";
+const ENV_LABEL = process.env.NEXT_PUBLIC_ENV === "production" ? "Production" : "Training";
 
 interface AppRailProps {
   collapsed?: boolean;
@@ -30,9 +30,9 @@ function NetworkCard() {
       className="relative block overflow-hidden rounded-[12px] bg-navy-tint p-4 transition-colors hover:bg-navy-tint/80"
     >
       <span aria-hidden className="absolute -top-8 -right-8 size-20 rounded-full bg-brand-orange/25" />
-      <p className="relative text-[14px] font-semibold text-primary">Réseau de diffusion</p>
+      <p className="relative text-[14px] font-semibold text-primary">Broadcast Network</p>
       <p className="relative mt-0.5 text-[12px] text-ink-2">
-        {isError || !cells ? "Liaison inconnue" : `${active}/${total} cellules actives`}
+        {isError || !cells ? "Connection unknown" : `${active}/${total} active cells`}
       </p>
       <div className="relative mt-3 flex items-center justify-between text-[12px] font-medium text-ink-2">
         <span>Disponibilité</span>

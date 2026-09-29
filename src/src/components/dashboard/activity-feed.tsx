@@ -20,7 +20,7 @@ export function ActivityFeed({
   alerts,
   maxItems = 5,
   className,
-  emptyMessage = "Aucune alerte récente",
+  emptyMessage = "No recent alerts",
 }: ActivityFeedProps) {
   const items = alerts.slice(0, maxItems);
 
@@ -91,7 +91,7 @@ export function ActivityFeedCompact({
   if (items.length === 0) {
     return (
       <p className={cn("py-4 text-center text-[12px] text-ink-3", className)}>
-        Aucune activité
+        No activity
       </p>
     );
   }

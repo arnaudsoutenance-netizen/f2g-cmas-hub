@@ -60,10 +60,10 @@ export function SendConfirmation({ open, onOpenChange, draft, onConfirm, pending
 
   const label =
     level === "light"
-      ? "Diffuser le test"
+      ? "Broadcast test"
       : level === "presidential"
-        ? "Diffuser l'alerte présidentielle"
-        : `Diffuser sur ${draft.cellCount} cellule${draft.cellCount > 1 ? "s" : ""}`;
+        ? "Broadcast presidential alert"
+        : `Broadcast to ${draft.cellCount} cell${draft.cellCount > 1 ? "s" : ""}`;
 
   return (
     <Dialog open={open} onOpenChange={close}>
@@ -72,7 +72,7 @@ export function SendConfirmation({ open, onOpenChange, draft, onConfirm, pending
         <div className="space-y-5 p-6">
           <div className="space-y-2">
             <DialogTitle className="text-[18px] leading-[26px] font-semibold text-ink">
-              {level === "presidential" ? "Alerte présidentielle : diffusion nationale" : "Confirmer la diffusion"}
+              {level === "presidential" ? "Presidential alert: national broadcast" : "Confirm broadcast"}
             </DialogTitle>
             <DialogDescription render={<div />} className="flex items-center gap-2 text-[13px] text-ink-3">
               <SeverityBadge messageId={draft.messageId} variant="solid" /> · {cls.alertType}
@@ -82,7 +82,7 @@ export function SendConfirmation({ open, onOpenChange, draft, onConfirm, pending
           {level === "presidential" && (
             <p className="flex gap-2.5 rounded-[8px] bg-sev-presidential-tint p-3 text-[13px] text-sev-presidential-fg">
               <LockKeyhole aria-hidden className="mt-0.5 size-4 shrink-0" />
-              Cette alerte ne peut pas être désactivée par les destinataires. Elle sera diffusée sur {draft.cellCount} cellule
+              This alert cannot be disabled by recipients. It will be broadcast to {draft.cellCount} cell
               {draft.cellCount > 1 ? "s" : ""}.
             </p>
           )}
@@ -118,7 +118,7 @@ export function SendConfirmation({ open, onOpenChange, draft, onConfirm, pending
                 onChange={(e) => setReviewed(e.target.checked)}
                 className="mt-1 size-4 accent-[var(--primary)]"
               />
-              J&apos;ai relu le message et vérifié les cellules ciblées.
+              J&apos;ai relu le message et vérifié les cells ciblées.
             </label>
           )}
 
@@ -160,7 +160,7 @@ export function SendConfirmation({ open, onOpenChange, draft, onConfirm, pending
 
         <div className="flex justify-end gap-3 border-t border-hairline bg-surface-sunken px-6 py-4">
           <Button variant="outline" size="md" onClick={() => close(false)}>
-            Annuler
+            Cancel
           </Button>
           <Button size="lg" disabled={!ready || pending} onClick={confirm} className={cn("rounded-[8px]", style.button)}>
             {pending && <LoaderCircle aria-hidden className="size-4 animate-spin" />}

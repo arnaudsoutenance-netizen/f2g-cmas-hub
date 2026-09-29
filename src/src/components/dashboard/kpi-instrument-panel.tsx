@@ -41,9 +41,9 @@ export function KpiInstrumentPanel() {
 
   const { alerts, today, success_rate: rate } = stats;
   const ledger: LedgerSegment[] = [
-    { status: "SENT", label: "Envoyées", value: alerts.sent, bar: "bg-st-sent" },
+    { status: "SENT", label: "Sent", value: alerts.sent, bar: "bg-st-sent" },
     { status: "SCHEDULED", label: "Programmées", value: alerts.scheduled, bar: "bg-st-scheduled" },
-    { status: "DRAFT", label: "Brouillons", value: alerts.draft, bar: "bg-st-draft/70" },
+    { status: "DRAFT", label: "Drafts", value: alerts.draft, bar: "bg-st-draft/70" },
     { status: "FAILED", label: "Échecs", value: alerts.failed, bar: "bg-st-failed" },
   ];
   const ledgerTotal = Math.max(1, ledger.reduce((sum, s) => sum + s.value, 0));
@@ -62,17 +62,17 @@ export function KpiInstrumentPanel() {
               <span className="text-[14px] leading-5 text-ink-3">%</span>
             </>
           ) : (
-            <span aria-label="Aucune donnée">—</span>
+            <span aria-label="No data">—</span>
           )}
         </p>
         <p className="mt-3 text-[13px] text-ink-3">
-          {hasDeliveries ? "Alertes envoyées sans échec de cellule." : "Aucune alerte envoyée pour l'instant."}
+          {hasDeliveries ? "Alerts sent without cell failures." : "No alerts sent yet."}
         </p>
       </div>
 
       <div className="border-t border-hairline p-5 lg:col-span-6 lg:border-t-0 lg:border-l">
         <div className="flex items-baseline justify-between gap-4">
-          <p className={overline}>Registre des alertes</p>
+          <p className={overline}>Alert Registry</p>
           <p className="text-[28px] leading-8 font-medium tracking-[-0.02em] text-ink">
             <CountUp value={alerts.total} />
           </p>

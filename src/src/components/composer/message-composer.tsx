@@ -27,7 +27,7 @@ export function MessageComposer({ value, onChange, invalid }: MessageComposerPro
     onChange(convertToGsm7(value));
     toast("Message converti en GSM-7", {
       description: "Les accents incompatibles ont été remplacés.",
-      action: { label: "Annuler", onClick: () => onChange(previous) },
+      action: { label: "Undo", onClick: () => onChange(previous) },
     });
   };
 
@@ -40,7 +40,7 @@ export function MessageComposer({ value, onChange, invalid }: MessageComposerPro
         )}
       >
         <label htmlFor={ids.textarea} className="sr-only">
-          Message de l&apos;alerte
+          Alert message
         </label>
         <textarea
           id={ids.textarea}

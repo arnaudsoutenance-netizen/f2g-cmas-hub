@@ -229,12 +229,12 @@ export function AlertStatusTimeline({
   const steps: TimelineStep[] = [
     {
       status: "DRAFT",
-      label: "Brouillon",
+      label: "Draft",
       timestamp: timestamps?.DRAFT,
     },
     {
       status: "SCHEDULED",
-      label: "Programmée",
+      label: "Scheduled",
       timestamp: timestamps?.SCHEDULED,
     },
     {
@@ -244,7 +244,7 @@ export function AlertStatusTimeline({
     },
     {
       status: "SENT",
-      label: "Envoyée",
+      label: "Sent",
       timestamp: timestamps?.SENT,
     },
   ];

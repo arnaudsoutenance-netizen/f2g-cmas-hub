@@ -14,16 +14,16 @@ export interface NavSection {
 
 export const NAV_SECTIONS: readonly NavSection[] = [
   {
-    title: "Opérations",
+    title: "Operations",
     items: [
-      { href: "/", label: "Tableau de bord", icon: LayoutDashboard },
-      { href: "/alerts", label: "Alertes", icon: BellRing },
-      { href: "/alerts/new", label: "Nouvelle alerte", icon: Plus, shortcut: "N" },
-      { href: "/templates", label: "Modèles", icon: LibraryBig },
+      { href: "/", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/alerts", label: "Alerts", icon: BellRing },
+      { href: "/alerts/new", label: "New Alert", icon: Plus, shortcut: "N" },
+      { href: "/templates", label: "Templates", icon: LibraryBig },
     ],
   },
-  { title: "Réseau", items: [{ href: "/cells", label: "Cellules", icon: RadioTower }] },
-  { title: "Système", items: [{ href: "/settings", label: "Paramètres", icon: Settings }] },
+  { title: "Network", items: [{ href: "/cells", label: "Cells", icon: RadioTower }] },
+  { title: "System", items: [{ href: "/settings", label: "Settings", icon: Settings }] },
 ];
 
 /** Longest matching href wins, so /alerts/new does not also light up /alerts. */
@@ -35,7 +35,7 @@ export function activeHref(pathname: string): string | undefined {
 }
 
 export function pageTitle(pathname: string): string {
-  if (/^\/alerts\/[^/]+$/.test(pathname) && pathname !== "/alerts/new") return "Détail de l'alerte";
+  if (/^\/alerts\/[^/]+$/.test(pathname) && pathname !== "/alerts/new") return "Alert Details";
   const href = activeHref(pathname);
   return NAV_SECTIONS.flatMap((s) => s.items).find((i) => i.href === href)?.label ?? "CMAS Hub";
 }
