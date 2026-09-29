@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: f2g-cmas-hub-api
+    runtime: python
+    region: frankfurt
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite+aiosqlite:///./cmas_hub.db
+      - key: SECRET_KEY
+        generateValue: true
+      - key: API_PREFIX
+        value: /api/v1
+      - key: CORS_ORIGINS
+        value: '["https://f2g-cmas-hub.vercel.app","https://src-sigma-brown.vercel.app","http://localhost:3000","http://localhost:3001"]'
+    healthCheckPath: /health
+    autoDeploy: true
