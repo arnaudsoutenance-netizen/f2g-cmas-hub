@@ -1,4 +1,4 @@
-import { BellRing, LayoutDashboard, LibraryBig, type LucideIcon, Plus, RadioTower, Settings } from "lucide-react";
+import { BellRing, LayoutDashboard, LibraryBig, type LucideIcon, Plus, RadioTower, Settings, Terminal } from "lucide-react";
 
 export interface NavItem {
   href: string;
@@ -22,7 +22,10 @@ export const NAV_SECTIONS: readonly NavSection[] = [
       { href: "/templates", label: "Templates", icon: LibraryBig },
     ],
   },
-  { title: "Network", items: [{ href: "/cells", label: "Cells", icon: RadioTower }] },
+  { title: "Network", items: [
+    { href: "/cells", label: "Cells", icon: RadioTower },
+    { href: "/demo", label: "Demo", icon: Terminal },
+  ] },
   { title: "System", items: [{ href: "/settings", label: "Settings", icon: Settings }] },
 ];
 
